@@ -432,12 +432,12 @@ module LLM
     # @return [Array<LLM::Function::Return>]
     def call_functions
       strategy = concurrency || :call
-      return @ctx.wait(:call) unless @confirm&.any?
+      return wait(strategy) unless @confirm&.any?
       confirmables = @ctx.functions.select { @confirm.include?(_1.name.to_s) }
       results = confirmables.map do |tool|
-        on_tool_confirmation(tool, strategy)
+        send(:on_tool_confirmation, tool, strategy)
       end
-      @ctx.functions? ? [*results, *@ctx.wait(:call)] : results
+      @ctx.functions? ? [*results, *wait(strategy)] : results
     end
 
     ##
