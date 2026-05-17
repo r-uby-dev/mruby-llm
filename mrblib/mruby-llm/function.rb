@@ -191,12 +191,10 @@ class LLM::Function
   #
   # @param [Symbol] strategy
   #  The execution strategy. mruby currently supports `:call` only.
-  # @return [LLM::Function::Return]
+  # @return [LLM::Function::Return, LLM::Function::Task]
   def spawn(strategy = :call)
     raise ArgumentError, "Unknown strategy: #{strategy.inspect}. Expected :call" unless strategy == :call
-    call
-  ensure
-    @called = true
+    CallTask.new(self)
   end
 
   ##
