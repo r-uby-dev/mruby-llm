@@ -58,6 +58,36 @@ agent = LLM::Agent.new(llm, stream: $stdout)
 agent.talk("Hello world")
 ```
 
+#### Agents (Advanced)
+
+An agent can be configured to require confirmation before a tool is
+executed. When a matching tool is called, mruby-llm runs
+`on_tool_confirmation`. That callback must decide whether to cancel the
+tool call or approve it and execute it by calling
+`fn.spawn(strategy).wait`, and it must always return an instance of
+[`LLM::Function::Return`](https://0x1eef.github.io/x/mruby-llm/LLM/Function/Return.html):
+
+```ruby
+require "llm"
+
+class Agent < LLM::Agent
+  tools DeleteFile
+  confirm "delete-file"
+
+  def on_tool_confirmation(fn, strategy)
+    path = fn.arguments["path"] || fn.arguments[:path]
+    if path.start_with?("/tmp/")
+      fn.spawn(strategy).wait
+    else
+      fn.cancel(reason: "Deletion requires approval")
+    end
+  end
+end
+
+llm = LLM.openai(key: ENV["KEY"])
+Agent.new(llm, stream: $stdout).talk("Delete /tmp/example.txt.")
+```
+
 #### Tools
 
 The
@@ -164,7 +194,7 @@ class Stream < LLM::Stream
 
   def on_tool_call(tool, error)
     return queue << error if error
-    queue << ctx.spawn(tool, :thread)
+    queue << ctx.spawn(tool, :call)
   end
 end
 
