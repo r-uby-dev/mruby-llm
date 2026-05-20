@@ -51,8 +51,8 @@ module LLM
     LLM::ZAI.new(**)
   end
 
-  def self.mcp(llm = nil, **)
-    LLM::MCP.new(llm, **)
+  def self.mcp(**)
+    LLM::MCP.new(**)
   end
 
   def self.lock(name, &)
