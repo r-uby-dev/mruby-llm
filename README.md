@@ -11,29 +11,29 @@
 mruby-llm is mruby's most capable AI runtime.
 
 It brings a single runtime for providers, agents, tools, skills, MCP,
-streaming, files, and persisted state to mruby in a form that can be
-embedded into small standalone applications. The project began as
-a fork of [llm.rb](https://github.com/llmrb/llm.rb), and a large
-number of features turned out to be portable. Both projects generally
-improve each other and code continues to flow both ways.
+A2A (Agent2Agent), streaming, files, and persisted state to mruby in a
+form that can be embedded into small standalone applications. The
+project began as a fork of [llm.rb](https://github.com/llmrb/llm.rb),
+and a large number of features turned out to be portable. Both projects
+generally improve each other and code continues to flow both ways.
 
-There is support for OpenAI, Anthropic, Google Gemini, DeepSeek, xAI, Z.ai,
-Ollama, and llama.cpp. The mruby port keeps the same overall execution
-model as llm.rb, but adapts it to mruby constraints. There's still quite
-a lot of the original llm.rb runtime that is supported though.
+It supports OpenAI, OpenAI-compatible endpoints, Anthropic, Google
+Gemini, DeepSeek, xAI, Z.ai, Ollama, and llama.cpp. The mruby port
+keeps the same overall execution model as llm.rb, but adapts it to
+mruby constraints.
 
 ## Quick start
 
 #### LLM::Context
 
 The
-[LLM::Context](https://0x1eef.github.io/x/mruby-llm/LLM/Context.html)
+[LLM::Context](https://0x1eef.github.io/x/llm.rb/LLM/Context.html)
 object is at the heart of the runtime. Almost all other features build
 on top of it. It is a low-level interface to a model, and requires tool
 execution to be managed manually. The
-[LLM::Agent](https://0x1eef.github.io/x/mruby-llm/LLM/Agent.html)
+[LLM::Agent](https://0x1eef.github.io/x/llm.rb/LLM/Agent.html)
 class is almost the same as
-[LLM::Context](https://0x1eef.github.io/x/mruby-llm/LLM/Context.html),
+[LLM::Context](https://0x1eef.github.io/x/llm.rb/LLM/Context.html),
 but it manages tool execution for you:
 
 ```ruby
@@ -45,9 +45,9 @@ ctx.talk("Hello world")
 #### LLM::Agent
 
 The
-[LLM::Agent](https://0x1eef.github.io/x/mruby-llm/LLM/Agent.html)
+[LLM::Agent](https://0x1eef.github.io/x/llm.rb/LLM/Agent.html)
 object is implemented on top of
-[LLM::Context](https://0x1eef.github.io/x/mruby-llm/LLM/Context.html).
+[LLM::Context](https://0x1eef.github.io/x/llm.rb/LLM/Context.html).
 It provides the same interface, but manages tool execution for you. It
 also includes loop guards that detect repeated tool-call patterns and
 advise the model to change course rather than raise an error:
@@ -65,7 +65,7 @@ executed. When a matching tool is called, mruby-llm runs
 `on_tool_confirmation`. That callback must decide whether to cancel the
 tool call or approve it and execute it by calling
 `fn.spawn(strategy).wait`, and it must always return an instance of
-[`LLM::Function::Return`](https://0x1eef.github.io/x/mruby-llm/LLM/Function/Return.html):
+[`LLM::Function::Return`](https://0x1eef.github.io/x/llm.rb/LLM/Function/Return.html):
 
 ```ruby
 require "llm"
@@ -91,7 +91,7 @@ Agent.new(llm, stream: $stdout).talk("Delete /tmp/example.txt.")
 #### Tools
 
 The
-[LLM::Tool](https://0x1eef.github.io/x/mruby-llm/LLM/Tool.html)
+[LLM::Tool](https://0x1eef.github.io/x/llm.rb/LLM/Tool.html)
 class can be subclassed to implement your own tools that extend the
 abilities of a model:
 
@@ -111,13 +111,15 @@ end
 #### MCP
 
 The
-[LLM::MCP](https://0x1eef.github.io/x/mruby-llm/LLM/MCP.html)
+[LLM::MCP](https://0x1eef.github.io/x/llm.rb/LLM/MCP.html)
 object lets mruby-llm use tools provided by an MCP server. Those tools
 are exposed through the same runtime as local tools, so you can pass
 them to either
-[LLM::Context](https://0x1eef.github.io/x/mruby-llm/LLM/Context.html)
+[LLM::Context](https://0x1eef.github.io/x/llm.rb/LLM/Context.html)
 or
-[LLM::Agent](https://0x1eef.github.io/x/mruby-llm/LLM/Agent.html):
+[LLM::Agent](https://0x1eef.github.io/x/llm.rb/LLM/Agent.html).
+
+Use the stdio transport to run a local MCP server:
 
 ```ruby
 llm = LLM.openai(key: ENV["OPENAI_SECRET"])
@@ -129,6 +131,49 @@ mcp.run do
   ctx.talk(ctx.wait(:call)) while ctx.functions?
 end
 ```
+
+Use the HTTP transport with remote MCP servers:
+
+```ruby
+llm = LLM.openai(key: ENV["OPENAI_SECRET"])
+mcp = LLM::MCP.http(
+  url: "https://remote-mcp.example.com"
+)
+
+mcp.run do
+  ctx = LLM::Context.new(llm, stream: $stdout, tools: mcp.tools)
+  ctx.talk("Use the available tools.")
+  ctx.talk(ctx.wait(:call)) while ctx.functions?
+end
+```
+
+#### A2A (Agent 2 Agent)
+
+The
+[LLM::A2A](https://0x1eef.github.io/x/llm.rb/LLM/A2A.html)
+object lets mruby-llm use skills provided by a remote A2A agent. Those
+skills are exposed through the same runtime as local tools, so you can
+pass them to either
+[LLM::Context](https://0x1eef.github.io/x/llm.rb/LLM/Context.html)
+or
+[LLM::Agent](https://0x1eef.github.io/x/llm.rb/LLM/Agent.html).
+
+Use remote skills as local tools:
+
+```ruby
+a2a = LLM::A2A.rest(
+  url: "https://remote-agent.example.com",
+  headers: {"Authorization" => "Bearer token"}
+)
+llm = LLM.openai(key: ENV["OPENAI_SECRET"])
+ctx = LLM::Context.new(llm, tools: a2a.skills)
+ctx.talk "Analyze this CSV and summarize the trends."
+ctx.talk(ctx.wait(:call)) while ctx.functions?
+```
+
+For more on direct messaging, task operations, push notification
+configs, and JSON-RPC, see the
+[LLM::A2A API docs](https://0x1eef.github.io/x/llm.rb/LLM/A2A.html).
 
 #### Skills
 
@@ -204,17 +249,66 @@ ctx.talk "Read README.md and summarize the quick start."
 ctx.talk(ctx.wait) while ctx.functions?
 ```
 
-#### Serialization
+#### Concurrency
 
-The [`LLM::Context`](https://0x1eef.github.io/x/llm.rb/LLM/Context.html)
-object can be serialized to JSON, which makes it suitable for storing
-in a file, a database column, or a Redis queue. The built-in
-ActiveRecord and Sequel plugins are built on top of this feature:
+llm.rb can run tool work concurrently. In mruby-llm, the available
+strategy is `:call` for sequential execution. On
+[LLM::Agent](https://0x1eef.github.io/x/llm.rb/LLM/Agent.html),
+you can set this with `concurrency`:
+
+```ruby
+class Agent < LLM::Agent
+  model "gpt-4.1-mini"
+  tools ReadFile
+  concurrency :call
+end
+
+llm = LLM.openai(key: ENV["OPENAI_SECRET"])
+agent = Agent.new(llm, stream: $stdout)
+agent.talk "Read README.md and CHANGELOG.md and compare them."
+```
+
+#### Context Compaction
+
+Long-lived conversations can be compacted automatically. The
+[LLM::Compactor](https://0x1eef.github.io/x/llm.rb/LLM/Compactor.html)
+summarizes older history and replaces it with a compact summary. Set
+`token_threshold:` as a percentage of the model's context window:
 
 ```ruby
 require "llm"
 
-llm = LLM.openai(key: ENV["KEY"])
+class Stream < LLM::Stream
+  def on_compaction(ctx, compactor)
+    puts "Compacting #{ctx.messages.size} messages..."
+  end
+
+  def on_compaction_finish(ctx, compactor)
+    puts "Compacted to #{ctx.messages.size} messages."
+  end
+end
+
+llm = LLM.openai(key: ENV["OPENAI_SECRET"])
+ctx = LLM::Context.new(
+  llm,
+  stream: Stream.new,
+  compactor: {
+    token_threshold: "90%",
+    retention_window: 8
+  }
+)
+```
+
+#### Serialization
+
+The [`LLM::Context`](https://0x1eef.github.io/x/llm.rb/LLM/Context.html)
+object can be serialized to JSON, which makes it suitable for storing
+in a file, a database column, or a Redis queue:
+
+```ruby
+require "llm"
+
+llm = LLM.openai(key: ENV["OPENAI_SECRET"])
 
 # Serialize a context
 ctx1 = LLM::Context.new(llm)
@@ -284,6 +378,11 @@ Declared mrbgem dependencies include:
 - `mruby-regexp`
 
 See [mrbgem.rake](mrbgem.rake).
+
+## Resources
+
+- [doc site](https://0x1eef.github.io/x/llm.rb?rebuild=1) has the API docs.
+- [llm.rb](https://github.com/llmrb/llm.rb) is the CRuby runtime this is based on.
 
 ## License
 
