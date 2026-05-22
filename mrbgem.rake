@@ -55,7 +55,6 @@ MRuby::Gem::Specification.new('mruby-llm') do |spec|
     mrblib/mruby-llm/mcp/router.rb
     mrblib/mruby-llm/mcp/rpc.rb
     mrblib/mruby-llm/mcp/transport/stdio.rb
-    mrblib/mruby-llm/mcp/transport/http/event_handler.rb
     mrblib/mruby-llm/mcp/transport/http.rb
     mrblib/mruby-llm/mcp.rb
     mrblib/mruby-llm/compactor.rb

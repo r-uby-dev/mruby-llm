@@ -67,10 +67,9 @@ module LLM::MCP::Transport
 
     def read(res)
       if res["content-type"].to_s.include?("text/event-stream")
-        parser = LLM::EventStream::Parser.new
-        parser.register EventHandler.new { enqueue(_1) }
-        res.read_body { parser << _1 }
-        parser.free
+        decoder = LLM::Transport::StreamDecoder.new { enqueue(_1) }
+        res.read_body { decoder << _1 }
+        decoder.free
       else
         payload = +""
         res.read_body { payload << _1 }
