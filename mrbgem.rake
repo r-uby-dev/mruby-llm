@@ -57,6 +57,14 @@ MRuby::Gem::Specification.new('mruby-llm') do |spec|
     mrblib/mruby-llm/mcp/transport/stdio.rb
     mrblib/mruby-llm/mcp/transport/http.rb
     mrblib/mruby-llm/mcp.rb
+    mrblib/mruby-llm/a2a/error.rb
+    mrblib/mruby-llm/a2a/card.rb
+    mrblib/mruby-llm/a2a/card/skill.rb
+    mrblib/mruby-llm/a2a/card/interface.rb
+    mrblib/mruby-llm/a2a/card/capabilities.rb
+    mrblib/mruby-llm/a2a/card/provider.rb
+    mrblib/mruby-llm/a2a/tasks.rb
+    mrblib/mruby-llm/a2a/notifications.rb
     mrblib/mruby-llm/compactor.rb
     mrblib/mruby-llm/buffer.rb
     mrblib/mruby-llm/function/registry.rb
