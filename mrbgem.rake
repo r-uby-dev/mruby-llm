@@ -65,6 +65,8 @@ MRuby::Gem::Specification.new('mruby-llm') do |spec|
     mrblib/mruby-llm/a2a/card/provider.rb
     mrblib/mruby-llm/a2a/tasks.rb
     mrblib/mruby-llm/a2a/notifications.rb
+    mrblib/mruby-llm/a2a.rb
+    mrblib/mruby-llm/a2a/transport/http.rb
     mrblib/mruby-llm/compactor.rb
     mrblib/mruby-llm/buffer.rb
     mrblib/mruby-llm/function/registry.rb
