@@ -125,7 +125,7 @@ class LLM::A2A
   def send_message(text, configuration = {}, metadata: nil)
     body = build_request(
       "SendMessage",
-      message: {role: "ROLE_USER", parts: [{text:}], messageId: next_id},
+      message: {role: "ROLE_USER", parts: [{text:}], messageId: next_message_id},
       configuration:,
       metadata:
     )
@@ -137,7 +137,7 @@ class LLM::A2A
   def send_streaming_message(text, configuration = {}, &on_event)
     body = build_request(
       "SendStreamingMessage",
-      message: {role: "ROLE_USER", parts: [{text:}], messageId: next_id},
+      message: {role: "ROLE_USER", parts: [{text:}], messageId: next_message_id},
       configuration:
     )
     execute_stream(body, &on_event)
@@ -317,6 +317,10 @@ class LLM::A2A
 
   def next_id
     @id += 1
+  end
+
+  def next_message_id
+    next_id.to_s
   end
 
   def build_request(method, **params)
