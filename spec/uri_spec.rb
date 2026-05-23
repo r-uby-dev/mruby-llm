@@ -57,6 +57,14 @@ describe "LLM::URI.parse" do
     end
   end
 
+  context "when given an absolute URL with only a query" do
+    let(:uri) { LLM::URI.parse("https://example.com?limit=10") }
+
+    it "normalizes the request URI to include the root path" do
+      expect(uri.request_uri).must_equal "/?limit=10"
+    end
+  end
+
   context "when given a relative path" do
     let(:uri) { LLM::URI.parse("/v1/chat/completions") }
 
