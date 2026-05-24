@@ -81,17 +81,26 @@ class LLM::Transport
 
     def perform_streaming(request, owner, stream)
       res = nil
+      raw_body = +""
       decoder_class = stream.decoder == LLM::Transport::StreamDecoder ? LLM::Transport::Curl::StreamDecoder : stream.decoder
       decoder = decoder_class.new(stream.parser.new(stream.streamer))
       raw = @curl.send(request_url(request), build_http_request(request)) do |header, chunk|
         raise LLM::Interrupt, "request interrupted" if interrupted?(owner)
         res ||= LLM::Transport::Response.from(header)
-        decoder.chunked = res["transfer-encoding"].to_s.downcase.include?("chunked") if decoder.respond_to?(:chunked=)
-        decoder << chunk
+        if res.success? && res["content-type"].to_s.include?("text/event-stream")
+          decoder.chunked = res["transfer-encoding"].to_s.downcase.include?("chunked") if decoder.respond_to?(:chunked=)
+          decoder << chunk
+        else
+          raw_body << chunk.to_s
+        end
       end
       res ||= LLM::Transport::Response.from(raw)
-      body = decoder.body
-      res.body = (Hash === body || Array === body) ? LLM::Object.from(body) : body
+      if raw_body.empty?
+        body = decoder.body
+        res.body = (Hash === body || Array === body) ? LLM::Object.from(body) : body
+      else
+        res.body = raw_body
+      end
       res
     ensure
       decoder&.free
