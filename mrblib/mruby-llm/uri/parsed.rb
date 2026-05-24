@@ -54,14 +54,7 @@ module LLM::URI
         @scheme = match[:scheme]
         @host = match[:host]
         @port = match[:port] ? match[:port].to_i : default_port(@scheme)
-        request_uri = match[:request_uri].to_s
-        @request_uri = if request_uri.empty?
-          "/"
-        elsif request_uri.start_with?("?")
-          "/#{request_uri}"
-        else
-          request_uri
-        end
+        @request_uri = parse_request_uri(match[:request_uri].to_s)
       else
         match = RELATIVE_PATTERN.match(@value)
         @scheme = nil
@@ -83,6 +76,16 @@ module LLM::URI
       case scheme
       when "https" then 443
       when "http" then 80
+      end
+    end
+
+    def parse_request_uri(uri)
+      if uri.empty?
+          "/"
+      elsif uri.start_with?("?")
+        "/#{uri}"
+      else
+        uri
       end
     end
   end
