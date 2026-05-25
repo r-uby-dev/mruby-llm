@@ -20,14 +20,16 @@
 #
 # @example Ruby-style
 #  class Address < LLM::Schema
-#    property :street, String, "Street address", required: true
+#    property :street, String, "Street address"
+#    required %i[street]
 #  end
 #
 #  class Person < LLM::Schema
-#    property :name, String, "Person's name", required: true
-#    property :age, Integer, "Person's age", required: true
-#    property :hobbies, Array[String], "Person's hobbies", required: true
-#    property :address, Address, "Person's address", required: true
+#    property :name, String, "Person's name"
+#    property :age, Integer, "Person's age"
+#    property :hobbies, Array[String], "Person's hobbies"
+#    property :address, Address, "Person's address"
+#    required %i[name age hobbies address]
 #  end
 class LLM::Schema
   extend LLM::Schema::Parser
@@ -58,6 +60,10 @@ class LLM::Schema
       end
       schema.array(item)
     end
+
+    def fetch(properties, name)
+      properties[name] || properties.fetch(name.to_s)
+    end
   end
 
   ##
@@ -84,6 +90,18 @@ class LLM::Schema
       options = {description:}.merge(options)
       options.each { (_2 == true) ? prop.public_send(_1) : prop.public_send(_1, *_2) }
       object[name] = prop
+    end
+  end
+
+  ##
+  # Mark existing properties as required.
+  # @param names [Array<Symbol,String>]
+  # @return [LLM::Schema::Object]
+  def self.required(names)
+    lock do
+      object.tap do |schema|
+        [*names].each { Utils.fetch(schema.properties, _1).required }
+      end
     end
   end
 
