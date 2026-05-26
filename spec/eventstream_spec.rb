@@ -132,7 +132,7 @@ describe "LLM::EventStream::Parser" do
       end
 
       it "preserves parsed arguments" do
-        expect(fn.arguments).must_equal({"command" => "date"})
+        expect({"command" => "date"}).must_equal(fn.arguments)
       end
     end
 
@@ -153,7 +153,7 @@ describe "LLM::EventStream::Parser" do
       it "emits the unresolved function metadata" do
         expect(fn.id).must_equal "call_2"
         expect(fn.name).must_equal "missing"
-        expect(fn.arguments).must_equal({"command" => "date"})
+        expect({"command" => "date"}).must_equal(fn.arguments)
       end
 
       it "emits an in-band error" do
@@ -190,7 +190,7 @@ describe "LLM::EventStream::Parser" do
         expect(fn).must_be_instance_of LLM::Function
         expect(fn.id).must_equal "google_call_0_0"
         expect(fn.name).must_equal "system"
-        expect(fn.arguments).must_equal({"command" => "date"})
+        expect({"command" => "date"}).must_equal(fn.arguments)
         expect(call.fetch(1)).must_be_nil
       end
     end
@@ -227,7 +227,7 @@ describe "LLM::EventStream::Parser" do
         expect(fn).must_be_instance_of LLM::Function
         expect(fn.id).must_equal "toolu_1"
         expect(fn.name).must_equal "system"
-        expect(fn.arguments).must_equal({"command" => "date"})
+        expect({"command" => "date"}).must_equal(fn.arguments)
         expect(call.fetch(1)).must_be_nil
       end
     end
@@ -266,7 +266,7 @@ describe "LLM::EventStream::Parser" do
         expect(fn).must_be_instance_of LLM::Function
         expect(fn.id).must_equal "call_1"
         expect(fn.name).must_equal "system"
-        expect(fn.arguments).must_equal({"command" => "date"})
+        expect({"command" => "date"}).must_equal(fn.arguments)
         expect(call.fetch(1)).must_be_nil
       end
     end

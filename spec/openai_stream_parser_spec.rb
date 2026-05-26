@@ -84,7 +84,7 @@ describe "LLM::OpenAI::StreamParser" do
     it "emits a function with the completed arguments" do
       expect(fn.id).must_equal "call_1"
       expect(fn.name).must_equal "missing"
-      expect(fn.arguments).must_equal({"command" => "date"})
+      expect({"command" => "date"}).must_equal(fn.arguments)
     end
 
     it "propagates tracer and model metadata" do
@@ -135,7 +135,7 @@ describe "LLM::OpenAI::StreamParser" do
     it "falls back to the chunk order when merging tool deltas" do
       expect(fn.id).must_equal "call_1"
       expect(fn.name).must_equal "missing"
-      expect(fn.arguments).must_equal({"command" => "date"})
+      expect({"command" => "date"}).must_equal(fn.arguments)
     end
   end
 end

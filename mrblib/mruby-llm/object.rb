@@ -174,6 +174,15 @@ class LLM::Object < BasicObject
     @h.slice(*args)
   end
 
+  ##
+  # @param [Hash, #to_h] other
+  # @return [Boolean]
+  def ==(other)
+    return false unless other.respond_to?(:to_h)
+    to_h == other.to_h || to_hash == other.to_h
+  end
+  alias_method :eql?, :==
+
   def method_missing(m, *args, &b)
     if m.to_s.end_with?("=")
       self[m.to_s[0..-2]] = args.first

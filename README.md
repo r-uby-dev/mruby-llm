@@ -75,7 +75,7 @@ class Agent < LLM::Agent
   confirm "delete-file"
 
   def on_tool_confirmation(fn, strategy)
-    path = fn.arguments["path"] || fn.arguments[:path]
+    path = fn.arguments.path
     if path.start_with?("/tmp/")
       fn.spawn(strategy).wait
     else

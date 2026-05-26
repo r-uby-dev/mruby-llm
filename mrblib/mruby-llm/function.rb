@@ -95,7 +95,7 @@ class LLM::Function
 
   ##
   # Returns function arguments
-  # @return [Array, nil]
+  # @return [Hash, Array, LLM::Object, nil]
   attr_accessor :arguments
 
   ##
@@ -292,11 +292,17 @@ class LLM::Function
     runner
   end
 
+  ##
+  # @param [Hash] other
+  # @return [void]
+  def arguments=(other)
+    @arguments = LLM::Object.from(other)
+  end
+
   private
 
   def format_openai(provider)
     params = @params || {type: "object", properties: {}}
-
     case provider.class.to_s
     when "LLM::OpenAI::Responses"
       {
