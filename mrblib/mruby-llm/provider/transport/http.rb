@@ -43,23 +43,23 @@ class LLM::Transport
 
     ##
     # Returns the current request owner.
-    # @return [Object]
+    # @return [Task]
     def request_owner
-      self
+      Task.current
     end
 
     ##
     # Performs a request through Curl and returns a transport response
     # wrapper so the provider layer can stay transport-agnostic.
     def request(request, owner:, stream: nil, &b)
-      set_request(ActiveRequest.new(curl: @curl), owner)
+      active = set_request(ActiveRequest.new(curl: @curl), owner)
       if stream
-        perform_streaming(request, owner, stream)
+        perform_streaming(request, owner, stream, active)
       elsif b
-        res = perform_request(request)
+        res = perform_request(request, owner, active)
         res.success? ? b.call(res) : res
       else
-        perform_request(request)
+        perform_request(request, owner, active)
       end
     ensure
       clear_request(owner)
@@ -75,13 +75,14 @@ class LLM::Transport
 
     attr_reader :host, :port, :timeout, :ssl
 
-    def perform_request(request)
+    def perform_request(request, owner, active)
       curl_request = @curl.send(request_url(request), build_http_request(request))
-      perform_until_done(curl_request)
+      active.request = curl_request
+      perform_until_done(curl_request, owner)
       LLM::Transport::Response.from(curl_request.response)
     end
 
-    def perform_streaming(request, owner, stream)
+    def perform_streaming(request, owner, stream, active)
       res = nil
       raw_body = +""
       decoder_class = stream.decoder == LLM::Transport::StreamDecoder ? LLM::Transport::Curl::StreamDecoder : stream.decoder
@@ -96,6 +97,7 @@ class LLM::Transport
           raw_body << chunk.to_s
         end
       end
+      active.request = curl_request
       perform_until_done(curl_request, owner)
       res ||= LLM::Transport::Response.from(curl_request.response)
       if raw_body.empty?
@@ -109,11 +111,16 @@ class LLM::Transport
       decoder&.free
     end
 
-    def perform_until_done(request, owner = nil)
+    def perform_until_done(request, owner)
       until request.done?
-        raise LLM::Interrupt, "request interrupted" if owner && interrupted?(owner)
+        if interrupted?(owner)
+          raise LLM::Interrupt, "request interrupted"
+        end
         @curl.perform
         Task.pass
+      end
+      if interrupted?(owner)
+        raise LLM::Interrupt, "request interrupted"
       end
       request.response
     end

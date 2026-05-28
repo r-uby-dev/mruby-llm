@@ -11,7 +11,7 @@ class LLM::Transport
   # @api private
   module Curl::Interruptible
     INTERRUPT_ERRORS = [::IOError, ::EOFError].freeze
-    ActiveRequest = Struct.new(:curl, keyword_init: true)
+    ActiveRequest = Struct.new(:curl, :request, keyword_init: true)
 
     def interrupt_errors
       [*INTERRUPT_ERRORS, *optional_interrupt_errors]
@@ -23,8 +23,9 @@ class LLM::Transport
     #  The execution owner whose request should be interrupted
     # @return [nil]
     def interrupt!(owner)
+      req = request_for(owner)
       lock { (@interrupts ||= {})[owner] = true }
-      owner.stop if owner.respond_to?(:stop)
+      req&.request&.cancel
     rescue *interrupt_errors
       nil
     end
