@@ -182,6 +182,7 @@ module LLM
     def talk(prompt, params = {})
       @owner = @llm.request_owner
       compactor.compact!(prompt) if compactor.compact?(prompt)
+      repair!(@messages, prompt)
       prompt, params, res = mode == :responses ? respond(prompt, params) : complete(prompt, params)
       self.compacted = false
       role = params[:role] || @llm.user_role
@@ -526,6 +527,26 @@ module LLM
         type: LLM::GuardError.name,
         message: warning
       })
+    end
+
+    ##
+    # Closes assistant tool-call messages that do not have matching tool
+    # responses. This can happen when a turn is interrupted while a tool call is
+    # streaming or waiting for user confirmation.
+    # @param [Array<LLM::Message>] messages
+    # @param [Object] prompt
+    # @return [void]
+    def repair!(messages, prompt)
+      message = messages.last
+      return unless message&.tool_call?
+      returns = self.returns + [*prompt].grep(LLM::Function::Return)
+      cancelled = []
+      [*message.extra.tool_calls].each do |tool|
+        next if returns.any? { _1.id == tool.id }
+        attrs = {cancelled: true, reason: "function call cancelled"}
+        cancelled << LLM::Function::Return.new(tool.id, tool.name, attrs)
+      end
+      messages << LLM::Message.new(@llm.tool_role, cancelled) unless cancelled.empty?
     end
   end
 end
