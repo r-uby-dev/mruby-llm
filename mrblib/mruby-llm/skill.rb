@@ -56,6 +56,7 @@ module LLM
       @instructions = ""
       @frontmatter = LLM::Object.from({})
       @tools = []
+      @inherit_tools = false
     end
 
     ##
@@ -74,7 +75,8 @@ module LLM
     # @param [LLM::Context] ctx
     # @return [Hash]
     def call(ctx)
-      instructions, tools, tracer = self.instructions, self.tools, ctx.llm.tracer
+      instructions, tracer = self.instructions, ctx.llm.tracer
+      tools = @inherit_tools ? [*ctx.params[:tools]].reject(&:skill?) : self.tools
       params = ctx.params.merge(mode: ctx.mode).reject { |key, _| [:tools, :schema].include?(key) }
       concurrency = params[:stream].extra[:concurrency] if LLM::Stream === params[:stream]
       params[:concurrency] = concurrency if concurrency
@@ -110,6 +112,13 @@ module LLM
       end
     end
 
+    ##
+    # Returns true when a skill should inherit tools from its parent
+    # @return [Boolean]
+    def inherit_tools?
+      @inherit_tools
+    end
+
     private
 
     def messages_for(ctx)
@@ -131,8 +140,25 @@ module LLM
       @frontmatter = LLM::Object.from(LLM::YAML.safe_load(match[1]) || {})
       @name = @frontmatter.name || @name
       @description = @frontmatter.description || @description
-      @tools = [*@frontmatter.tools].map { LLM::Tool.find_by_name!(_1) }
+      @inherit_tools, @tools = parse_tools(@frontmatter.tools)
       @instructions = content[match.end(0)..-1] || ""
+    end
+
+    def parse_tools(tools)
+      case tools
+      when String
+        tools == "inherit" ? [true, []] : raise_invalid_error!(tools)
+      when Array
+        [false, tools.map { LLM::Tool.find_by_name!(_1) }]
+      when NilClass
+        [false, []]
+      else
+        raise_invalid_error!(tools)
+      end
+    end
+
+    def raise_invalid_error!(tools)
+      raise LLM::Error, "invalid value for tools key: '#{tools}'"
     end
   end
 end
