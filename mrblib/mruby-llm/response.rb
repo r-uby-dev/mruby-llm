@@ -39,6 +39,13 @@ module LLM
     end
 
     ##
+    # Returns the provider response id, when present.
+    # @return [String, nil]
+    def id
+      LLM::Object === body ? body["id"] : nil
+    end
+
+    ##
     # Returns an inspection of the response object
     # @return [String]
     def inspect
