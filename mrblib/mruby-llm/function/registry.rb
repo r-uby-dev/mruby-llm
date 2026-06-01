@@ -85,7 +85,7 @@ class LLM::Function
     # @return [Class<LLM::Tool>, String, nil]
     # @api private
     def registry_key(entry)
-      tool_name(entry) ? entry.name : entry
+      tool_name(entry) || entry
     end
 
     ##
@@ -94,7 +94,8 @@ class LLM::Function
     # @return [String, nil]
     # @api private
     def tool_name(entry)
-      entry.respond_to?(:name) ? entry.name : nil
+      name = entry.respond_to?(:name) ? entry.name : nil
+      name.to_s.empty? ? nil : name
     end
 
     ##
