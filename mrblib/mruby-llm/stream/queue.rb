@@ -2,7 +2,10 @@
 
 class LLM::Stream
   ##
-  # A small queue for collecting streamed tool results.
+  # A small queue for collecting streamed tool work. Values can be immediate
+  # {LLM::Function::Return} objects or task-like objects returned by
+  # {LLM::Function#spawn}. Calling {#wait} resolves queued work and returns
+  # an array of {LLM::Function::Return} values.
   class Queue
     ##
     # @param [LLM::Stream] stream
@@ -13,8 +16,8 @@ class LLM::Stream
     end
 
     ##
-    # Enqueue a function return.
-    # @param [LLM::Function::Return] item
+    # Enqueue a function return or spawned task.
+    # @param [LLM::Function::Return, #wait] item
     # @return [LLM::Stream::Queue]
     def <<(item)
       @items << item
@@ -37,24 +40,32 @@ class LLM::Stream
     alias_method :cancel!, :interrupt!
 
     ##
-    # Waits for queued results and returns them.
+    # Waits for queued work to finish and returns function results.
     # @return [Array<LLM::Function::Return>]
     def wait
-      returns = @items.shift(@items.length)
-      returns.each do |result|
-        unless LLM::Function::Return === result
-          raise ArgumentError, "Synchronous mruby stream queue only accepts LLM::Function::Return values"
-        end
-      end
-      fire_hooks(returns)
+      returns, tasks = @items.shift(@items.length).partition { LLM::Function::Return === _1 }
+      results = wait_tasks(tasks)
+      returns.concat fire_hooks(tasks, results)
     end
     alias_method :value, :wait
 
     private
 
-    def fire_hooks(results)
-      results.each do |result|
-        @stream.on_tool_return(nil, result)
+    def wait_tasks(tasks)
+      return [] if tasks.empty?
+      results = {}
+      grouped_tasks = tasks.group_by(&:group_class)
+      grouped_tasks.each do |group_class, group|
+        returns = group_class.new(group).wait
+        returns.each.with_index { results[group[_2]] = _1 }
+      end
+      tasks.map { results[_1] }
+    end
+
+    def fire_hooks(tasks, results)
+      results.each_with_index do |result, idx|
+        tool = tasks[idx]&.function
+        @stream.on_tool_return(tool, result) if tool
       end
       results
     end

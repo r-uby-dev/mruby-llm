@@ -92,20 +92,72 @@ describe "LLM::Stream" do
   end
 
   describe "#wait" do
-    before do
-      stream.queue << tool_error
+    context "with queued function returns" do
+      before do
+        stream.queue << tool_error
+      end
+
+      it "forwards to the queue" do
+        expect(stream.wait(:call).map(&:to_h)).must_equal([
+          {id: "call_1", name: "system", value: {error: true, type: "LLM::NoSuchToolError", message: "tool not found"}}
+        ])
+      end
+
+      it "ignores strategy arguments when draining queued work" do
+        expect(stream.wait(:thread).map(&:to_h)).must_equal([
+          {id: "call_1", name: "system", value: {error: true, type: "LLM::NoSuchToolError", message: "tool not found"}}
+        ])
+      end
     end
 
-    it "forwards to the queue" do
-      expect(stream.wait(:call).map(&:to_h)).must_equal([
-        {id: "call_1", name: "system", value: {error: true, type: "LLM::NoSuchToolError", message: "tool not found"}}
-      ])
-    end
+    context "with queued spawned work" do
+      let(:stream) do
+        Class.new(LLM::Stream) do
+          attr_reader :events
 
-    it "ignores strategy arguments when draining queued work" do
-      expect(stream.wait(:thread).map(&:to_h)).must_equal([
-        {id: "call_1", name: "system", value: {error: true, type: "LLM::NoSuchToolError", message: "tool not found"}}
-      ])
+          def initialize
+            @events = []
+          end
+
+          def on_tool_return(tool, result)
+            @events << [tool, result]
+          end
+        end.new
+      end
+
+      let(:tool_class) do
+        Class.new(LLM::Tool) do
+          name "system"
+          parameter :command, String, "The command"
+          required %i[command]
+
+          def call(command:)
+            {ok: command == "date"}
+          end
+        end
+      end
+
+      let(:tool) do
+        tool_class.function.dup.tap do |fn|
+          fn.id = "call_1"
+          fn.arguments = {"command" => "date"}
+        end
+      end
+
+      before do
+        stream.queue << tool.spawn(:call)
+      end
+
+      it "waits for the spawned work" do
+        expect(stream.wait(:call).map(&:to_h)).must_equal([
+          {id: "call_1", name: "system", value: {ok: true}}
+        ])
+      end
+
+      it "emits on_tool_return" do
+        returns = stream.wait(:call)
+        expect(stream.events).must_equal [[tool, returns.fetch(0)]]
+      end
     end
   end
 end
