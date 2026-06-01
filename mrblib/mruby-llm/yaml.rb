@@ -8,7 +8,7 @@ module LLM
       index = 0
 
       while index < lines.length
-        line = lines[index]
+        line = lines[index].chomp
         index += 1
 
         next if line.strip.empty?

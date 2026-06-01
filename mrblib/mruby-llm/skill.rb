@@ -75,7 +75,7 @@ module LLM
     # @return [Hash]
     def call(ctx)
       instructions, tools, tracer = self.instructions, self.tools, ctx.llm.tracer
-      params = ctx.params.merge(mode: ctx.mode).reject { [:tools, :schema].include?(_1) }
+      params = ctx.params.merge(mode: ctx.mode).reject { |key, _| [:tools, :schema].include?(key) }
       concurrency = params[:stream].extra[:concurrency] if LLM::Stream === params[:stream]
       params[:concurrency] = concurrency if concurrency
       agent = Class.new(LLM::Agent) do
@@ -123,7 +123,7 @@ module LLM
     end
 
     def parse(content)
-      match = content.match(/\A---\s*\n(.*?)\n---\s*\n?(.*)\z/m)
+      match = content.match(/\A---\s*\n(.*?)\n---\s*\n?/m)
       unless match
         @instructions = content
         return
@@ -132,7 +132,7 @@ module LLM
       @name = @frontmatter.name || @name
       @description = @frontmatter.description || @description
       @tools = [*@frontmatter.tools].map { LLM::Tool.find_by_name!(_1) }
-      @instructions = match[2]
+      @instructions = content[match.end(0)..-1] || ""
     end
   end
 end
