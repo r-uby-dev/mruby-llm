@@ -306,6 +306,25 @@ class LLM::Function
     @arguments = LLM::Object.from(other)
   end
 
+  ##
+  # Equality comparison
+  # @param [LLM::Function] other
+  #  An LLM::Function
+  # @return [Boolean]
+  def ==(other)
+    return true if equal?(other)
+    return false unless self.class === other
+    return false unless id and other.id
+    id == other.id
+  end
+  alias_method :eql?, :==
+
+  ##
+  # @return [Integer]
+  def hash
+    id ? id.hash : object_id.hash
+  end
+
   private
 
   def format_openai(provider)
