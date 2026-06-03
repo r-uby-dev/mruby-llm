@@ -145,6 +145,17 @@ describe "LLM::Context" do
   end
 
   context "when given a streamed tool call" do
+    let(:stream) do
+      Class.new(LLM::Stream) do
+        attr_reader :returns
+        def initialize
+          @returns = []
+        end
+        def on_tool_return(tool, result)
+          @returns << [tool.name, result.name, result.value]
+        end
+      end.new
+    end
     let(:tool) do
       Class.new(LLM::Tool) do
         name "system"
@@ -157,7 +168,7 @@ describe "LLM::Context" do
         end
       end
     end
-    let(:params) { {model: "gpt-4.1", stream: true, tools: [tool]} }
+    let(:params) { {model: "gpt-4.1", stream:, tools: [tool]} }
     let(:prompt) do
       ctx.build_prompt do
         _1.talk "You are a bot that can run UNIX system commands"
@@ -185,6 +196,11 @@ describe "LLM::Context" do
       expect(ctx.functions).must_be_empty
       expect(res.content).must_equal "Today's date is August 24, 2025."
       expect(ctx.messages.last.content).must_equal "Today's date is August 24, 2025."
+    end
+
+    it "emits tool returns from direct waits" do
+      ctx.wait(:call)
+      expect(stream.returns).must_equal [["system", "system", {"success" => "2025-08-24"}]]
     end
   end
 

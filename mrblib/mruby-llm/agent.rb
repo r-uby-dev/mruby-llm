@@ -437,6 +437,7 @@ module LLM
       results = confirmables.map do |tool|
         send(:on_tool_confirmation, tool, strategy)
       end
+      @ctx.method(:emit_tool_returns).call(confirmables, results)
       @ctx.functions? ? [*results, *wait(strategy)] : results
     end
 

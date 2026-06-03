@@ -248,14 +248,6 @@ describe "LLM::Agent" do
   end
 
   describe "#talk" do
-    before do
-      transport.stub(
-        "POST", "/v1/chat/completions",
-        fixture: "openai/chat_completions.sse",
-        headers: {"content-type" => "text/event-stream"}
-      )
-    end
-
     context "when configured with a class-level stream object" do
       let(:stream) { StringIO.new }
       let(:agent_class) do
@@ -267,6 +259,11 @@ describe "LLM::Agent" do
       let(:agent) { agent_class.new(llm, model: "gpt-4.1") }
 
       before do
+        transport.stub(
+          "POST", "/v1/chat/completions",
+          fixture: "openai/chat_completions.sse",
+          headers: {"content-type" => "text/event-stream"}
+        )
         agent.talk("Say hello")
       end
 
@@ -287,6 +284,11 @@ describe "LLM::Agent" do
       let(:agent) { agent_class.new(llm, model: "gpt-4.1", stream: override_stream) }
 
       before do
+        transport.stub(
+          "POST", "/v1/chat/completions",
+          fixture: "openai/chat_completions.sse",
+          headers: {"content-type" => "text/event-stream"}
+        )
         agent.talk("Say hello")
       end
 
@@ -296,6 +298,102 @@ describe "LLM::Agent" do
 
       it "does not write to the class-level stream" do
         expect(default_stream.string).must_equal ""
+      end
+    end
+
+    context "when auto-executing streamed tool calls" do
+      let(:stream) do
+        Class.new(LLM::Stream) do
+          attr_reader :returns
+          def initialize
+            @returns = []
+          end
+          def on_tool_return(tool, result)
+            @returns << [tool.name, result.name, result.value]
+          end
+        end.new
+      end
+      let(:tool) do
+        Class.new(LLM::Tool) do
+          name "system"
+          parameter :command, String, "The command"
+          required %i[command]
+          def call(command:)
+            {"success" => command == "date" ? "2025-08-24" : false}
+          end
+        end
+      end
+      let(:agent) { LLM::Agent.new(llm, model: "gpt-4.1", stream:, tools: [tool]) }
+
+      before do
+        transport
+          .stub(
+            "POST", "/v1/chat/completions",
+            fixture: "openai/chat_completions_tool.sse",
+            headers: {"content-type" => "text/event-stream"}
+          )
+          .stub(
+            "POST", "/v1/chat/completions",
+            fixture: "openai/chat_completions_tool_result.sse",
+            headers: {"content-type" => "text/event-stream"}
+          )
+        agent.talk("Run date")
+      end
+
+      it "emits tool returns without manual stream queueing" do
+        expect(stream.returns).must_equal [["system", "system", {"success" => "2025-08-24"}]]
+      end
+    end
+
+    context "when confirming streamed tool calls" do
+      let(:stream) do
+        Class.new(LLM::Stream) do
+          attr_reader :returns
+          def initialize
+            @returns = []
+          end
+          def on_tool_return(tool, result)
+            @returns << [tool.name, result.name, result.value]
+          end
+        end.new
+      end
+      let(:tool) do
+        Class.new(LLM::Tool) do
+          name "system"
+          parameter :command, String, "The command"
+          required %i[command]
+          def call(command:)
+            {"success" => command == "date" ? "2025-08-24" : false}
+          end
+        end
+      end
+      let(:agent_class) do
+        Class.new(LLM::Agent) do
+          confirm "system"
+          def on_tool_confirmation(fn, strategy)
+            fn.spawn(strategy).wait
+          end
+        end
+      end
+      let(:agent) { agent_class.new(llm, model: "gpt-4.1", stream:, tools: [tool]) }
+
+      before do
+        transport
+          .stub(
+            "POST", "/v1/chat/completions",
+            fixture: "openai/chat_completions_tool.sse",
+            headers: {"content-type" => "text/event-stream"}
+          )
+          .stub(
+            "POST", "/v1/chat/completions",
+            fixture: "openai/chat_completions_tool_result.sse",
+            headers: {"content-type" => "text/event-stream"}
+          )
+        agent.talk("Run date")
+      end
+
+      it "emits confirmed tool returns" do
+        expect(stream.returns).must_equal [["system", "system", {"success" => "2025-08-24"}]]
       end
     end
   end

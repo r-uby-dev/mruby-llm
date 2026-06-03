@@ -272,8 +272,11 @@ module LLM
         @queue.wait
       else
         return guarded_returns if guarded_returns
-        @queue = functions.spawn(strategy)
-        @queue.wait
+        tools = functions
+        @queue = tools.spawn(strategy)
+        returns = @queue.wait
+        emit_tool_returns(tools, returns)
+        returns
       end
     ensure
       @queue = nil
@@ -527,6 +530,14 @@ module LLM
         type: LLM::GuardError.name,
         message: warning
       })
+    end
+
+    ##
+    # Emits tool return callbacks for directly waited function work.
+    # @api private
+    def emit_tool_returns(tools, returns)
+      return unless LLM::Stream === stream
+      returns.each_with_index { |result, index| stream.on_tool_return(tools[index], result) }
     end
 
     ##
