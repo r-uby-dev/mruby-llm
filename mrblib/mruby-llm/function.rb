@@ -192,7 +192,7 @@ class LLM::Function
   #  The execution strategy. mruby currently supports `:call`, `:task`, and `:fork`.
   # @return [LLM::Function::Return, LLM::Function::Task, LLM::Function::ForkTask]
   def spawn(strategy = :call)
-    case strategy
+    @task = case strategy
     when :call
       CallTask.new(self)
     when :task
@@ -255,9 +255,14 @@ class LLM::Function
   # `on_interrupt`.
   # @return [nil]
   def interrupt!
+    return nil if @interrupting
+    @interrupting = true
+    @task&.interrupt!
     hook = %i[on_cancel on_interrupt].find { @runner.respond_to?(_1) }
     @runner.public_send(hook) if hook
     nil
+  ensure
+    @interrupting = false
   end
   alias_method :cancel!, :interrupt!
 

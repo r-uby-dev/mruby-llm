@@ -16,7 +16,7 @@ module LLM
   end
 
   def self.task?
-    Object.const_defined?(:Task)
+    Object.const_defined?(:Task) and Task.current
   end
 
   def self.json
