@@ -189,8 +189,8 @@ class LLM::Function
   # or {LLM::Function::Array#spawn}.
   #
   # @param [Symbol] strategy
-  #  The execution strategy. mruby currently supports `:call` and `:task`.
-  # @return [LLM::Function::Return, LLM::Function::Task]
+  #  The execution strategy. mruby currently supports `:call`, `:task`, and `:fork`.
+  # @return [LLM::Function::Return, LLM::Function::Task, LLM::Function::ForkTask]
   def spawn(strategy = :call)
     case strategy
     when :call
@@ -198,8 +198,10 @@ class LLM::Function
     when :task
       fn = self
       LLM::Function::Task.new(::Task.new { fn.call }, fn)
+    when :fork
+      ForkTask.new(self)
     else
-      raise ArgumentError, "Unknown strategy: #{strategy.inspect}. Expected :call or :task"
+      raise ArgumentError, "Unknown strategy: #{strategy.inspect}. Expected :call, :task, or :fork"
     end
   end
 

@@ -27,8 +27,10 @@ class LLM::Function
         CallGroup.new(self)
       when :task
         TaskGroup.new(map { |fn| LLM::Function::Task.new(::Task.new { fn.call }, fn) })
+      when :fork
+        TaskGroup.new(map { |fn| LLM::Function::ForkTask.new(fn) })
       else
-        raise ArgumentError, "Unknown strategy: #{strategy.inspect}. Expected :call or :task"
+        raise ArgumentError, "Unknown strategy: #{strategy.inspect}. Expected :call, :task, or :fork"
       end
     end
 

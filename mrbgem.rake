@@ -74,6 +74,7 @@ MRuby::Gem::Specification.new('mruby-llm') do |spec|
     mrblib/mruby-llm/function/registry.rb
     mrblib/mruby-llm/function/tracing.rb
     mrblib/mruby-llm/function/task.rb
+    mrblib/mruby-llm/function/fork_task.rb
     mrblib/mruby-llm/function/call_task.rb
     mrblib/mruby-llm/function/call_group.rb
     mrblib/mruby-llm/function/task_group.rb
