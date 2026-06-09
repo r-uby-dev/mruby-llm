@@ -137,7 +137,7 @@ class LLM::OpenAI
         if text = content_part["text"]
           text << delta_text
         else
-          content_part["text"] = delta_text
+          content_part["text"] = delta_text.dup
         end
         emit_content(delta_text)
       end
@@ -152,7 +152,7 @@ class LLM::OpenAI
         if summary_item = summary[summary_index]
           summary_item["text"] << delta
         else
-          summary[summary_index] = {"type" => "summary_text", "text" => delta}
+          summary[summary_index] = {"type" => "summary_text", "text" => delta.dup}
         end
         emit_reasoning_content(delta)
       end

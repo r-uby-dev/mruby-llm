@@ -108,7 +108,7 @@ class LLM::Google
         last_existing_part["text"] << text
         emit_content(text)
       else
-        parts << delta
+        parts << delta.merge("text" => text.dup)
         emit_content(text)
       end
     end

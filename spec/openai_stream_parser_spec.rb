@@ -4,18 +4,23 @@ describe "LLM::OpenAI::StreamParser" do
   let(:stream) do
     Class.new(LLM::Stream) do
       attr_reader :content, :reasoning_content, :calls
+      attr_reader :chunks, :reasoning_chunks
 
       def initialize
         @content = +""
         @reasoning_content = +""
         @calls = []
+        @chunks = []
+        @reasoning_chunks = []
       end
 
       def on_content(value)
+        @chunks << value
         @content << value
       end
 
       def on_reasoning_content(value)
+        @reasoning_chunks << value
         @reasoning_content << value
       end
 
@@ -45,6 +50,11 @@ describe "LLM::OpenAI::StreamParser" do
     it "accumulates reasoning content into one message" do
       expect(parser.body.dig("choices", 0, "message", "reasoning_content")).must_equal "Think"
       expect(stream.reasoning_content).must_equal "Think"
+    end
+
+    it "does not mutate emitted stream chunks while accumulating the response" do
+      expect(stream.chunks).must_equal ["Hel", "lo"]
+      expect(stream.reasoning_chunks).must_equal ["Think"]
     end
   end
 

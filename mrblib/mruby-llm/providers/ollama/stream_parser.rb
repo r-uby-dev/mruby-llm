@@ -40,7 +40,7 @@ class LLM::Ollama
             @body[key]["content"] << value["content"]
             emit_content(value["content"])
           else
-            @body[key] = value
+            @body[key] = value.merge("content" => value["content"].dup)
             emit_content(value["content"])
           end
         else

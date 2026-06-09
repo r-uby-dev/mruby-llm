@@ -73,14 +73,14 @@ class LLM::OpenAI
         if target_content = target_message["content"]
           target_content << content
         else
-          target_message["content"] = content
+          target_message["content"] = content.dup
         end
         emit_content(content)
       elsif reasoning = delta["reasoning_content"]
         if target_reasoning = target_message["reasoning_content"]
           target_reasoning << reasoning
         else
-          target_message["reasoning_content"] = reasoning
+          target_message["reasoning_content"] = reasoning.dup
         end
         emit_reasoning_content(reasoning)
       elsif tool_calls = delta["tool_calls"]
@@ -98,7 +98,7 @@ class LLM::OpenAI
         if target_content = target_message["content"]
           target_content << content
         else
-          target_message["content"] = content
+          target_message["content"] = content.dup
         end
         emit_content(content)
         return
@@ -107,7 +107,7 @@ class LLM::OpenAI
         if target_reasoning = target_message["reasoning_content"]
           target_reasoning << reasoning
         else
-          target_message["reasoning_content"] = reasoning
+          target_message["reasoning_content"] = reasoning.dup
         end
         emit_reasoning_content(reasoning)
         return
