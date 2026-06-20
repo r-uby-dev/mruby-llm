@@ -1,14 +1,12 @@
 <p align="center">
-  <a href="https://github.com/llmrb/llm.rb"><img src="https://github.com/llmrb/llm.rb/raw/main/llm.png" width="200" height="200" border="0" alt="mruby-llm"></a>
-</p>
-<p align="center">
-  <a href="https://opensource.org/license/0bsd"><img src="https://img.shields.io/badge/License-0BSD-orange.svg?" alt="License"></a>
-  <a href="https://github.com/llmrb/llm.rb/tags"><img src="https://img.shields.io/badge/version-0.1.0.beta.17-green.svg?" alt="Version"></a>
+  <a href="https://r.uby.dev">
+    <img src="rubydev.svg" width="400" height="200" border="0" alt="a r.uby.dev project">
+  </a>
 </p>
 
-## About
+> A [r.uby.dev](https://r.uby.dev) project.
 
-mruby-llm is mruby's most capable AI runtime.
+mruby-llm is mruby's capable AI runtime and a [r.uby.dev](https://r.uby.dev) project.
 
 It brings a single runtime for providers, agents, tools, skills, MCP,
 A2A (Agent2Agent), streaming, files, and persisted state to mruby in a
