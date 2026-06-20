@@ -128,6 +128,7 @@ class LLM::Transport
     def build_http_request(request)
       http_request = ::HTTP::Request.new
       http_request.method = request.method
+      body = request.body || read_body_stream(request)
       headers = {}
       request.headers.each { headers[_1] = _2 } if request.respond_to?(:headers)
       if http_request.respond_to?(:headers)
@@ -136,17 +137,19 @@ class LLM::Transport
           headers.each { existing[_1] = _2 }
         end
       end
-      body = request.body || read_body_stream(request.body_stream)
       http_request.body = body if body
       http_request
     end
 
-    def read_body_stream(io)
+    def read_body_stream(request)
+      io = request.body_stream
       return nil unless io
       body = +""
       while (chunk = io.read(16 * 1024))
         body << chunk
       end
+      request.headers.delete("transfer-encoding")
+      request["content-length"] = body.bytesize
       body
     end
 

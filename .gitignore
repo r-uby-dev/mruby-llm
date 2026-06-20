@@ -9,6 +9,7 @@
 /tmp/
 /*.eld
 /*.lock
+/*.core
 /.env
 /script
 /bench/
