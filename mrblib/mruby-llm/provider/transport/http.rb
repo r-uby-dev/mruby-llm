@@ -21,7 +21,10 @@ class LLM::Transport
       @timeout = timeout
       @ssl = ssl
       @curl = ::Curl.multi
-      @curl.timeout = timeout if @curl.respond_to?(:timeout=)
+      @curl.timeout = timeout
+      @curl.connect_timeout = timeout
+      @curl.low_speed_limit = 1
+      @curl.low_speed_time = timeout
       @monitor = Monitor.new
     end
 
@@ -87,7 +90,7 @@ class LLM::Transport
       raw_body = +""
       decoder_class = stream.decoder == LLM::Transport::StreamDecoder ? LLM::Transport::Curl::StreamDecoder : stream.decoder
       decoder = decoder_class.new(stream.parser.new(stream.streamer))
-      curl_request = @curl.send(request_url(request), build_http_request(request)) do |header, chunk|
+      curl_request = send_streaming_request(request) do |header, chunk|
         raise LLM::Interrupt, "request interrupted" if interrupted?(owner)
         res ||= LLM::Transport::Response.from(header)
         if res.success? && res["content-type"].to_s.include?("text/event-stream")
@@ -109,6 +112,17 @@ class LLM::Transport
       res
     ensure
       decoder&.free
+    end
+
+    def send_streaming_request(request, &block)
+      previous_timeout = @curl.timeout
+      previous_timeout_ms = @curl.timeout_ms
+      @curl.timeout = nil
+      @curl.timeout_ms = nil
+      @curl.send(request_url(request), build_http_request(request), &block)
+    ensure
+      @curl.timeout = previous_timeout
+      @curl.timeout_ms = previous_timeout_ms
     end
 
     def perform_until_done(request, owner)
