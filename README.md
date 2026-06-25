@@ -1,97 +1,97 @@
 <p align="center">
-  <a href="https://r.uby.dev">
+  <a href="https://r.uby.dev/mruby-llm/">
     <img src="rubydev.svg" width="400" height="200" border="0" alt="a r.uby.dev project">
   </a>
 </p>
 
 > A [r.uby.dev](https://r.uby.dev) project.
 
-mruby-llm is mruby's capable AI runtime and a [r.uby.dev](https://r.uby.dev) project.
+## Welcome
 
-It brings a single runtime for providers, agents, tools, skills, MCP,
-A2A (Agent2Agent), streaming, files, and persisted state to mruby in a
-form that can be embedded into small standalone applications. The
-project began as a fork of [llm.rb](https://github.com/llmrb/llm.rb),
-and a large number of features turned out to be portable. Both projects
-generally improve each other and code continues to flow both ways.
+Welcome to the canonical [mruby-llm](https://github.com/r-uby-dev/mruby-llm#readme) repository.
 
-It supports OpenAI, OpenAI-compatible endpoints, Anthropic, Google
-Gemini, DeepSeek, xAI, Z.ai, Ollama, and llama.cpp. The mruby port
-keeps the same overall execution model as llm.rb, but adapts it to
-mruby constraints.
+mruby-llm is not a library, framework or toolkit but an advanced
+runtime for building highly capable AI applications with mruby.
+
+It is designed for terminal tools, services, small standalone
+binaries, and embedded systems. In theory it could run anywhere
+mruby runs but in practice it will depend on the device.
+
+Embedded systems are not the only use-case though. mruby is a good
+candidate for all kinds of software, and sometimes people think it
+is only for embedded devices. That's not the case. It can be used to
+build software as or more capable as CRuby can, and on the same
+platforms.
+
+## Features
+
+The runtime supports OpenAI, OpenAI-compatible endpoints, Anthropic,
+Google Gemini, DeepSeek, xAI, Z.ai, Ollama, and llama.cpp. It has
+first-class support for streaming, tool calls, MCP and A2A,
+embeddings, vector stores and the RAG pattern.
+
+It supports nearly all the same features as [llm.rb](https://r.uby.dev/llm),
+and if you already know llm.rb then you already know mruby-llm:
+it is a smaller subset. The type of applications you can build is quite
+different though. While CRuby primarily targets the web, mruby allows
+you to target a much broader set of platforms, and it also allows you
+to distribute your software as a standalone binary.
+
+I think it is accurate to say that mruby-llm is [llm.rb](https://r.uby.dev/llm)
+plus the features of the mruby runtime. That's what makes it interesting.
+You can do things you wouldn't normally do in CRuby, and that makes it
+possible to use the same llm.rb runtime in ways you couldn't before.
+
+## Install
+
+Source code and build instructions are available from
+[github.com/r-uby-dev/mruby-llm](https://github.com/r-uby-dev/mruby-llm).
+
+```ruby
+MRuby::Build.new("app") do |conf|
+  conf.gembox "default"
+  conf.gem github: "r-uby-dev/mruby-llm", branch: "main"
+end
+```
 
 ## Quick start
 
-#### LLM::Context
-
-The
-[LLM::Context](https://0x1eef.github.io/x/llm.rb/LLM/Context.html)
-object is at the heart of the runtime. Almost all other features build
-on top of it. It is a low-level interface to a model, and requires tool
-execution to be managed manually. The
-[LLM::Agent](https://0x1eef.github.io/x/llm.rb/LLM/Agent.html)
-class is almost the same as
-[LLM::Context](https://0x1eef.github.io/x/llm.rb/LLM/Context.html),
-but it manages tool execution for you:
-
-```ruby
-llm = LLM.openai(key: ENV["OPENAI_SECRET"])
-ctx = LLM::Context.new(llm, stream: $stdout)
-ctx.talk("Hello world")
-```
-
 #### LLM::Agent
 
-The
-[LLM::Agent](https://0x1eef.github.io/x/llm.rb/LLM/Agent.html)
-object is implemented on top of
-[LLM::Context](https://0x1eef.github.io/x/llm.rb/LLM/Context.html).
-It provides the same interface, but manages tool execution for you. It
-also includes loop guards that detect repeated tool-call patterns and
-advise the model to change course rather than raise an error:
+The [`LLM::Agent`](https://r.uby.dev/api-docs/llm.rb/LLM/Agent.html)
+class is the default high-level interface, and it is recommended for
+most use-cases. It manages tool execution automatically, guards against
+infinite loops, manages conversation state, and much more.
 
 ```ruby
-llm = LLM.openai(key: ENV["OPENAI_SECRET"])
+llm = LLM.deepseek(key: ENV["KEY"])
 agent = LLM::Agent.new(llm, stream: $stdout)
-agent.talk("Hello world")
+agent.talk "Hello world"
 ```
 
-#### Agents (Advanced)
+#### LLM::Context
 
-An agent can be configured to require confirmation before a tool is
-executed. When a matching tool is called, mruby-llm runs
-`on_tool_confirmation`. That callback must decide whether to cancel the
-tool call or approve it and execute it by calling
-`fn.spawn(strategy).wait`, and it must always return an instance of
-[`LLM::Function::Return`](https://0x1eef.github.io/x/llm.rb/LLM/Function/Return.html):
+The [`LLM::Context`](https://r.uby.dev/api-docs/llm.rb/LLM/Context.html)
+class is at the heart of the runtime and it is what
+[`LLM::Agent`](https://r.uby.dev/api-docs/llm.rb/LLM/Agent.html) uses
+under the hood. It requires that the tool call loop be managed manually:
+sometimes that can be useful, but usually for advanced use-cases.
+If you're new to mruby-llm, try
+[`LLM::Agent`](https://r.uby.dev/api-docs/llm.rb/LLM/Agent.html) first.
 
 ```ruby
-require "llm"
-
-class Agent < LLM::Agent
-  tools DeleteFile
-  confirm "delete-file"
-
-  def on_tool_confirmation(fn, strategy)
-    path = fn.arguments.path
-    if path.start_with?("/tmp/")
-      fn.spawn(strategy).wait
-    else
-      fn.cancel(reason: "Deletion requires approval")
-    end
-  end
-end
-
-llm = LLM.openai(key: ENV["KEY"])
-Agent.new(llm, stream: $stdout).talk("Delete /tmp/example.txt.")
+llm = LLM.deepseek(key: ENV["KEY"])
+ctx = LLM::Context.new(llm, stream: $stdout)
+ctx.talk "Hello world"
 ```
 
-#### Tools
+#### LLM::Tool
 
-The
-[LLM::Tool](https://0x1eef.github.io/x/llm.rb/LLM/Tool.html)
-class can be subclassed to implement your own tools that extend the
-abilities of a model:
+Subclasses of [`LLM::Tool`](https://r.uby.dev/api-docs/llm.rb/LLM/Tool.html)
+are plain Ruby classes with an optional set of typed parameters. The
+model can choose to call them on your behalf, and they're one of the
+most powerful features for extending the feature set or abilities of a
+model.
 
 ```ruby
 class ReadFile < LLM::Tool
@@ -106,281 +106,124 @@ class ReadFile < LLM::Tool
 end
 ```
 
-#### MCP
+#### LLM::Stream
 
-The
-[LLM::MCP](https://0x1eef.github.io/x/llm.rb/LLM/MCP.html)
-object lets mruby-llm use tools provided by an MCP server. Those tools
-are exposed through the same runtime as local tools, so you can pass
-them to either
-[LLM::Context](https://0x1eef.github.io/x/llm.rb/LLM/Context.html)
-or
-[LLM::Agent](https://0x1eef.github.io/x/llm.rb/LLM/Agent.html).
-
-Use the stdio transport to run a local MCP server:
+Streams can be simple IO objects or subclasses of
+[`LLM::Stream`](https://r.uby.dev/api-docs/llm.rb/LLM/Stream.html)
+with structured callbacks for content, reasoning, tool calls, tool
+returns, and compaction.
 
 ```ruby
-llm = LLM.openai(key: ENV["OPENAI_SECRET"])
+class MyStream < LLM::Stream
+  def on_content(content)
+    print content
+  end
+
+  def on_reasoning_content(content)
+    warn content
+  end
+end
+
+llm = LLM.deepseek(key: ENV["KEY"])
+agent = LLM::Agent.new(llm, stream: MyStream.new)
+agent.talk "Explain Ruby fibers."
+```
+
+#### LLM::MCP
+
+The Model Context Protocol (MCP) has first-class support in mruby-llm.
+The stdio and http transports work out of the box. MCP tools are
+translated into subclasses of
+[`LLM::Tool`](https://r.uby.dev/api-docs/llm.rb/LLM/Tool.html) that
+can be used with
+[`LLM::Context`](https://r.uby.dev/api-docs/llm.rb/LLM/Context.html)
+or [`LLM::Agent`](https://r.uby.dev/api-docs/llm.rb/LLM/Agent.html).
+
+```ruby
+llm = LLM.deepseek(key: ENV["KEY"])
 mcp = LLM::MCP.stdio(argv: ["ruby", "server.rb"])
 
 mcp.run do
-  ctx = LLM::Context.new(llm, stream: $stdout, tools: mcp.tools)
-  ctx.talk("Use the available tools to inspect the environment.")
-  ctx.talk(ctx.wait(:call)) while ctx.functions?
+  agent = LLM::Agent.new(llm, stream: $stdout, tools: mcp.tools)
+  agent.talk "Use the available tools to inspect the environment."
 end
 ```
 
-Use the HTTP transport with remote MCP servers:
+#### LLM::A2A
+
+The Agent 2 Agent (A2A) protocol has first-class support in mruby-llm.
+The rest and jsonrpc transports work out of the box. A2A skills are
+translated into subclasses of
+[`LLM::Tool`](https://r.uby.dev/api-docs/llm.rb/LLM/Tool.html) that
+can be used with
+[`LLM::Context`](https://r.uby.dev/api-docs/llm.rb/LLM/Context.html)
+or [`LLM::Agent`](https://r.uby.dev/api-docs/llm.rb/LLM/Agent.html).
 
 ```ruby
-llm = LLM.openai(key: ENV["OPENAI_SECRET"])
-mcp = LLM::MCP.http(
-  url: "https://remote-mcp.example.com"
+llm = LLM.deepseek(key: ENV["KEY"])
+a2a = LLM::A2A.rest(url: "https://remote-agent.example.com")
+
+agent = LLM::Agent.new(llm, stream: $stdout, tools: a2a.skills)
+agent.talk "Run the skill"
+```
+
+#### RAG
+
+Most providers offer an embedding model that can be used for semantic
+search, or similarity search. An embedding model can generate embeddings
+that can then be stored in a database that is optimized for storing and
+querying vectors, such as SQLite's
+[sqlite-vec](https://github.com/asg017/sqlite-vec) or PostgreSQL's
+[pg-vector](https://github.com/pgvector/pgvector).
+
+mruby-llm also includes support for OpenAI's vector store API. It
+provides a vector database as a HTTP service but we won't cover
+that here.
+
+```ruby
+llm  = LLM.openai(key: ENV["KEY"])
+body = "mruby-llm is mruby's capable AI runtime."
+embedding = llm.embed([body]).embeddings.first
+
+Document.create!(
+  title: "mruby-llm",
+  body:,
+  embedding:,
 )
-
-mcp.run do
-  ctx = LLM::Context.new(llm, stream: $stdout, tools: mcp.tools)
-  ctx.talk("Use the available tools.")
-  ctx.talk(ctx.wait(:call)) while ctx.functions?
-end
-```
-
-#### A2A (Agent 2 Agent)
-
-The
-[LLM::A2A](https://0x1eef.github.io/x/llm.rb/LLM/A2A.html)
-object lets mruby-llm use skills provided by a remote A2A agent. Those
-skills are exposed through the same runtime as local tools, so you can
-pass them to either
-[LLM::Context](https://0x1eef.github.io/x/llm.rb/LLM/Context.html)
-or
-[LLM::Agent](https://0x1eef.github.io/x/llm.rb/LLM/Agent.html).
-
-Use remote skills as local tools:
-
-```ruby
-a2a = LLM::A2A.rest(
-  url: "https://remote-agent.example.com",
-  headers: {"Authorization" => "Bearer token"}
-)
-llm = LLM.openai(key: ENV["OPENAI_SECRET"])
-ctx = LLM::Context.new(llm, tools: a2a.skills)
-ctx.talk "Analyze this CSV and summarize the trends."
-ctx.talk(ctx.wait(:call)) while ctx.functions?
-```
-
-For more on direct messaging, task operations, push notification
-configs, and JSON-RPC, see the
-[LLM::A2A API docs](https://0x1eef.github.io/x/llm.rb/LLM/A2A.html).
-
-#### Skills
-
-Skills are reusable instructions loaded from a `SKILL.md` directory.
-They let you package behavior and tool access together, and they plug
-into the same runtime as tools, agents, and MCP:
-
-```yaml
----
-name: release
-description: Prepare a release
-tools: ["read-file"]
----
-
-## Task
-
-Review the release state and summarize what changed.
-```
-
-```ruby
-class ReleaseAgent < LLM::Agent
-  model "gpt-4.1-mini"
-  skills "./skills/release"
-end
-```
-
-#### LLM::Stream
-
-The
-[LLM::Stream](https://0x1eef.github.io/x/llm.rb/LLM/Stream.html)
-object lets you observe output and runtime events as they happen. You
-can subclass it to handle streamed content in your own application:
-
-```ruby
-require "llm"
-
-class Stream < LLM::Stream
-  def on_content(content)
-    $stdout << content
-  end
-end
-
-llm = LLM.openai(key: ENV["KEY"])
-ctx = LLM::Context.new(llm, stream: Stream.new)
-ctx.talk "Write a haiku about Ruby."
-```
-
-#### LLM::Stream (advanced)
-
-The
-[LLM::Stream](https://0x1eef.github.io/x/llm.rb/LLM/Stream.html)
-object can also resolve tool calls while output is still streaming. In
-`on_tool_call`, you can spawn the tool, push the work onto the stream
-queue, and later drain it with `wait`:
-
-```ruby
-require "llm"
-
-class Stream < LLM::Stream
-  def on_content(content)
-    $stdout << content
-  end
-
-  def on_tool_call(tool, error)
-    return queue << error if error
-    queue << ctx.spawn(tool, :call)
-  end
-end
-
-llm = LLM.openai(key: ENV["KEY"])
-ctx = LLM::Context.new(llm, stream: Stream.new, tools: [ReadFile])
-ctx.talk "Read README.md and summarize the quick start."
-ctx.talk(ctx.wait) while ctx.functions?
 ```
 
 #### Concurrency
 
-llm.rb can run tool work concurrently. In mruby-llm, the available
-strategy is `:call` for sequential execution. On
-[LLM::Agent](https://0x1eef.github.io/x/llm.rb/LLM/Agent.html),
-you can set this with `concurrency`:
+mruby-llm supports multiple tool execution strategies. The choice
+between them often depends on the requirements of your application
+and the mruby build you ship.
+
+Sequential execution uses `:call`. Lightweight concurrent work can use
+`:task`, and process isolation can use `:fork` when the target platform
+supports it.
 
 ```ruby
-class Agent < LLM::Agent
-  model "gpt-4.1-mini"
-  tools ReadFile
-  concurrency :call
-end
+llm = LLM.deepseek(key: ENV["KEY"])
+tools = [FetchNews, FetchStocks, FetchFeeds]
 
-llm = LLM.openai(key: ENV["OPENAI_SECRET"])
-agent = Agent.new(llm, stream: $stdout)
-agent.talk "Read README.md and CHANGELOG.md and compare them."
+agent = LLM::Agent.new(llm, tools:, concurrency: :task)
+agent.talk "Run the tools concurrently"
 ```
 
-#### Context Compaction
+## Applications
 
-Long-lived conversations can be compacted automatically. The
-[LLM::Compactor](https://0x1eef.github.io/x/llm.rb/LLM/Compactor.html)
-summarizes older history and replaces it with a compact summary. Set
-`token_threshold:` as a percentage of the model's context window:
+mruby-llm is used to build small terminal applications that are
+available to the general public over SSH.
 
-```ruby
-require "llm"
-
-class Stream < LLM::Stream
-  def on_compaction(ctx, compactor)
-    puts "Compacting #{ctx.messages.size} messages..."
-  end
-
-  def on_compaction_finish(ctx, compactor)
-    puts "Compacted to #{ctx.messages.size} messages."
-  end
-end
-
-llm = LLM.openai(key: ENV["OPENAI_SECRET"])
-ctx = LLM::Context.new(
-  llm,
-  stream: Stream.new,
-  compactor: {
-    token_threshold: "90%",
-    retention_window: 8
-  }
-)
-```
-
-#### Serialization
-
-The [`LLM::Context`](https://0x1eef.github.io/x/llm.rb/LLM/Context.html)
-object can be serialized to JSON, which makes it suitable for storing
-in a file, a database column, or a Redis queue:
-
-```ruby
-require "llm"
-
-llm = LLM.openai(key: ENV["OPENAI_SECRET"])
-
-# Serialize a context
-ctx1 = LLM::Context.new(llm)
-ctx1.talk "Remember that my favorite language is Ruby"
-string = ctx1.to_json
-
-# Restore a context (from JSON)
-ctx2 = LLM::Context.new(llm, stream: $stdout)
-ctx2.restore(string:)
-ctx2.talk "What is my favorite language?"
-```
-
-## Integration
-
-Add to your mruby build config:
-
-```ruby
-MRuby::Build.new("app") do |conf|
-  curldir = File.expand_path(ENV["CURLDIR"] || "/usr/local")
-  conf.toolchain
-
-  conf.cc.include_paths << File.join(curldir, "include")
-  conf.linker.library_paths << File.join(curldir, "lib")
-
-  conf.gembox "default"
-  conf.gem github: "llmrb/mruby-llm", branch: "main"
-  conf.enable_debug
-end
-```
-
-For local development in this repository, use the bundled Makefile:
-
-```sh
-make
-make test
-```
-
-The Makefile expects an mruby checkout at `../mruby`. Override that with
-`MRUBY_DIR=/absolute/path/to/mruby` if needed.
-
-For direct integration into another mruby build, build through your mruby
-checkout:
-
-```sh
-ruby minirake MRUBY_CONFIG=/absolute/path/to/build_config.rb
-```
-
-Dependencies are declared in [mrbgem.rake](mrbgem.rake). In practice the
-main external build requirement is `libcurl`, because the runtime depends on
-`mruby-curl` and `mruby-http`. The local build also expects curl headers and
-libraries under `/usr/local` by default; override with
-`CURLDIR=/absolute/path`.
-
-## Dependencies
-
-Declared mrbgem dependencies include:
-
-- `mruby-http`
-- `mruby-curl`
-- `mruby-json`
-- `mruby-stringio`
-- `mruby-process`
-- `mruby-io`
-- `mruby-time`
-- `mruby-env`
-- `mruby-struct`
-- `mruby-regexp`
-
-See [mrbgem.rake](mrbgem.rake).
+| Application | Try it | Runtime |
+| --- | --- | --- |
+| [matz](https://r.uby.dev/matz/) | `ssh matz@r.uby.dev` | [mruby-llm](https://r.uby.dev/mruby-llm/) |
+| [robert](https://4.4bsd.dev/robert) | `ssh robert@4.4bsd.dev` | [mruby-llm](https://r.uby.dev/mruby-llm/) |
 
 ## Resources
 
-- [doc site](https://0x1eef.github.io/x/llm.rb?rebuild=1) has the API docs.
-- [llm.rb](https://github.com/llmrb/llm.rb) is the CRuby runtime this is based on.
+- [r.uby.dev/mruby-llm](https://r.uby.dev/mruby-llm/)
+- [llm.rb](https://r.uby.dev/llm/)
 
 ## License
 
