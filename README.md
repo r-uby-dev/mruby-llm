@@ -227,6 +227,24 @@ available to the general public over SSH.
 
 ## License
 
-[BSD Zero Clause](https://choosealicense.com/licenses/0bsd/)
+[Business Source License 1.1](./LICENSE)
 <br>
-See [LICENSE](./LICENSE)
+Commercial production use requires a commercial license.
+<br>
+Each version converts to the
+[BSD Zero Clause](https://choosealicense.com/licenses/0bsd/)
+four years after its first public release.
+<br>
+Contact [robert@r.uby.dev](mailto:robert@r.uby.dev) for a commercial
+license.
+
+### Waivers
+
+Waivers are automatically granted for: <br>
+
+  * Personal use
+  * Students
+  * Teachers
+  * Evaluation, development, and testing
+  * Non-profits and charities
+  * Companies with less than or equal to 50 employees
