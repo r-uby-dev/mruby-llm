@@ -18,14 +18,24 @@
 Changes since `v0.1.0.beta.18`.
 
 This release backports significant features from llm.rb to mruby-llm,
-including a new DeepInfra provider with audio and image support, DeepSeek
-SVG vector graphics generation, schema rendering and defaults, a complete
-set of built-in agent tools (shell, read-file, chdir, git, rg, swap-text,
-write-file, mkdir, pwd), normalized OpenAI audio responses via LLM::URIData,
-an `ask` convenience method on both contexts and agents, and a complete
-rewrite of the README.
+and relicenses the project under the Business Source License (BSL).
+
+### Breaking
+
+* **Relicense under Business Source License 1.1** <br>
+  The mruby-llm project is relicensed from BSD Zero Clause (0BSD) to the
+  Business Source License 1.1 (BUSL-1.1). Free use waivers are automatically
+  granted for personal use, students and teachers, evaluation and development,
+  non-profits, and companies with 50 or fewer employees. Each version converts
+  to 0BSD four years after its first public release.
 
 ### Add
+
+* **Add Symbol resolution to `LLM::Agent.tools` and `LLM::Agent.skills`** <br>
+  The `tools` and `skills` DSL methods now accept a single Symbol argument,
+  which is resolved to a method name on the agent instance at initialization
+  time. This allows dynamic tool and skill lists, consistent with how `confirm`
+  already works.
 
 * **Add a new provider: LLM::DeepInfra** <br>
   [DeepInfra](https://deepinfra.com) provide OpenAI-compatible endpoints for a
@@ -112,7 +122,9 @@ rewrite of the README.
   Provide a top-level `LLM.deepinfra(key:)` shorthand for creating
   `LLM::DeepInfra` provider instances.
 
-### Change
+* **Update mruby-curl to v0.6.1** <br>
+  Update the mruby-curl dependency from v0.6.0 to v0.6.1 and change the
+  GitHub repository from `llmrb/mruby-curl` to `r-uby-dev/mruby-curl`.
 
 * **Normalize OpenAI text-to-speech responses** <br>
   The `res.audio` method now returns an `LLM::URIData` object for OpenAI

@@ -48,3 +48,4 @@ clean:
 distclean: clean
 	rm -rf $(BUILD_DIR)
 	rm -rf $(REPOS_DIR)
+	rm -rf build.rb.lock
