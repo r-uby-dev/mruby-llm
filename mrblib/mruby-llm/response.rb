@@ -42,7 +42,9 @@ module LLM
     # Returns the provider response id, when present.
     # @return [String, nil]
     def id
-      LLM::Object === body ? body["id"] : nil
+      return nil unless LLM::Object === body
+      body["id"] || body["responseId"] || body["response_id"] ||
+        body["requestId"] || body["request_id"]
     end
 
     ##

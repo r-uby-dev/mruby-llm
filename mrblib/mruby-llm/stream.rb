@@ -154,8 +154,8 @@ module LLM
     # @return [LLM::Function, nil]
     def __find__(name)
       tools = extra[:tools] || ctx&.params&.dig(:tools) || []
-      tool = tools.find do
-        candidate = _1.respond_to?(:function) ? _1.function.name : _1.name
+      tool = tools.find do |tool|
+        candidate = tool.respond_to?(:function) ? tool.function.name : tool.name
         candidate.to_s == name.to_s
       end
       if tool

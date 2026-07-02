@@ -38,9 +38,9 @@ module LLM
     end
 
     ##
-    # @raise [NotImplementedError]
+    # @return [LLM::DeepSeek::Images]
     def images
-      raise NotImplementedError
+      @images ||= LLM::DeepSeek::Images.new(self)
     end
 
     ##

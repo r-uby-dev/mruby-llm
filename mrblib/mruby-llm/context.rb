@@ -194,6 +194,29 @@ module LLM
     alias_method :chat, :talk
 
     ##
+    # Ask a question and return the content string directly.
+    # Accepts a block for streaming.
+    # This interface is compatible with RubyLLM's `ask` method.
+    # @param [String] prompt
+    # @param [Hash] options
+    # @option options [#<<, LLM::Stream, nil] :stream
+    #  A stream target
+    # @yield [String] content chunks when streaming
+    # @return [LLM::Response]
+    def ask(prompt, options = {}, &block)
+      options = {stream: nil}.merge!(options || {})
+      stream = options[:stream]
+      target = if block
+        blk = block.dup
+        blk.singleton_class.alias_method(:<<, :call) unless blk.respond_to?(:<<)
+        blk
+      else
+        stream
+      end
+      target ? talk(prompt, stream: target) : talk(prompt)
+    end
+
+    ##
     # @return [String]
     def inspect
       "#<#{self.class.name}:0x#{object_id.to_s(16)} " \

@@ -37,6 +37,7 @@ MRuby::Gem::Specification.new('mruby-llm') do |spec|
     mrblib/mruby-llm/schema/all_of.rb
     mrblib/mruby-llm/schema/any_of.rb
     mrblib/mruby-llm/schema/one_of.rb
+    mrblib/mruby-llm/schema/renderer.rb
     mrblib/mruby-llm/schema/parser.rb
     mrblib/mruby-llm/schema.rb
     mrblib/mruby-llm/contract.rb
@@ -169,6 +170,12 @@ MRuby::Gem::Specification.new('mruby-llm') do |spec|
     mrblib/mruby-llm/providers/deepseek.rb
     mrblib/mruby-llm/providers/deepseek/request_adapter.rb
     mrblib/mruby-llm/providers/deepseek/request_adapter/completion.rb
+    mrblib/mruby-llm/providers/deepseek/response_adapter.rb
+    mrblib/mruby-llm/providers/deepseek/images.rb
+    mrblib/mruby-llm/providers/deepinfra.rb
+    mrblib/mruby-llm/providers/deepinfra/response_adapter.rb
+    mrblib/mruby-llm/providers/deepinfra/images.rb
+    mrblib/mruby-llm/providers/deepinfra/audio.rb
     mrblib/mruby-llm/providers/llamacpp.rb
     mrblib/mruby-llm/providers/xai.rb
     mrblib/mruby-llm/providers/xai/images.rb
@@ -178,6 +185,16 @@ MRuby::Gem::Specification.new('mruby-llm') do |spec|
     mrblib/mruby-llm/context/serializer.rb
     mrblib/mruby-llm/tool/param.rb
     mrblib/mruby-llm/tool.rb
+    mrblib/mruby-llm/tools/command.rb
+    mrblib/mruby-llm/tools/chdir.rb
+    mrblib/mruby-llm/tools/git.rb
+    mrblib/mruby-llm/tools/mkdir.rb
+    mrblib/mruby-llm/tools/pwd.rb
+    mrblib/mruby-llm/tools/read_file.rb
+    mrblib/mruby-llm/tools/rg.rb
+    mrblib/mruby-llm/tools/shell.rb
+    mrblib/mruby-llm/tools/swap_text.rb
+    mrblib/mruby-llm/tools/write_file.rb
     mrblib/mruby-llm/skill.rb
     mrblib/mruby-llm/loop_guard.rb
   ].map { File.expand_path(_1, __dir__) }

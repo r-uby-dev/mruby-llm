@@ -51,6 +51,10 @@ module LLM
     LLM::ZAI.new(**)
   end
 
+  def self.deepinfra(**)
+    LLM::DeepInfra.new(**)
+  end
+
   def self.mcp(**)
     LLM::MCP.new(**)
   end

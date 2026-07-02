@@ -222,9 +222,15 @@ module LLM
     #   response = agent.talk("Hello, what is your name?")
     #   puts response.choices[0].content
     def talk(prompt, params = {})
-      run_loop(prompt, params)
+      run_loop(prompt, params, :talk)
     end
     alias_method :chat, :talk
+
+    ##
+    # @see LLM::Context#ask
+    def ask(prompt, params = {})
+      run_loop(prompt, params, :ask)
+    end
 
     ##
     # @return [LLM::Buffer<LLM::Message>]
@@ -451,22 +457,23 @@ module LLM
     ##
     # Runs the tool loop
     # @api private
-    def run_loop(prompt, params)
+    def run_loop(prompt, params, target = :talk)
       run = proc do
+        talk = @ctx.method(target)
         max = params.key?(:tool_attempts) ? params.delete(:tool_attempts) : 25
         max = Integer(max) if max
         stream = params[:stream] || @ctx.params[:stream]
         stream.extra[:concurrency] = concurrency if LLM::Stream === stream
-        res = @ctx.talk(apply_instructions(prompt), params)
+        res = talk.call(apply_instructions(prompt), params)
         while @ctx.functions?
           if max
             max.times do
               break unless @ctx.functions?
-              res = @ctx.talk(call_functions, params)
+              res = talk.call(call_functions, params)
             end
-            res = @ctx.talk(@ctx.functions.map(&:rate_limit), params) if @ctx.functions?
+            res = talk.call(@ctx.functions.map(&:rate_limit), params) if @ctx.functions?
           else
-            res = @ctx.talk(call_functions, params)
+            res = talk.call(call_functions, params)
           end
         end
         res

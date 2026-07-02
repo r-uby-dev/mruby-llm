@@ -106,6 +106,19 @@ class LLM::Schema
   end
 
   ##
+  # @param [Hash] defaults
+  # @return [LLM::Schema::Object]
+  def self.defaults(defaults)
+    lock do
+      object.tap do |schema|
+        defaults.each do |name, val|
+          Utils.fetch(schema.properties, name).default(val)
+        end
+      end
+    end
+  end
+
+  ##
   # @api private
   # @return [LLM::Schema]
   def self.schema
@@ -122,6 +135,14 @@ class LLM::Schema
       @object ||= schema.object({})
     end
   end
+
+  ##
+  # Render the schema as a prompt-friendly string.
+  # @return [String]
+  def self.to_s
+    Renderer.render(object, root: true)
+  end
+  class << self; alias_method :inspect, :to_s; end
 
   ##
   # @api private
