@@ -21,7 +21,7 @@ module LLM
     ##
     # @param (see LLM::Provider#initialize)
     # @return [LLM::LlamaCpp]
-    def initialize(host: "localhost", port: 8080, ssl: false, **)
+    def initialize(host: "localhost", port: 8013, ssl: false, **)
       super(host:, port:, ssl:, **)
     end
 
@@ -69,11 +69,11 @@ module LLM
     end
 
     ##
-    # Returns the default model for chat completions
-    # @see https://ollama.com/library/qwen3 qwen3
-    # @return [String]
+    # Returns nil.
+    # Whatever model is served by llamacpp acts as the default.
+    # @return [nil]
     def default_model
-      "qwen3"
+      nil
     end
   end
 end
