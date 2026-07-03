@@ -185,7 +185,6 @@ MRuby::Gem::Specification.new('mruby-llm') do |spec|
     mrblib/mruby-llm/context/serializer.rb
     mrblib/mruby-llm/tool/param.rb
     mrblib/mruby-llm/tool.rb
-    mrblib/mruby-llm/tools/command.rb
     mrblib/mruby-llm/tools/chdir.rb
     mrblib/mruby-llm/tools/git.rb
     mrblib/mruby-llm/tools/mkdir.rb
@@ -209,8 +208,9 @@ MRuby::Gem::Specification.new('mruby-llm') do |spec|
   spec.add_dependency 'mruby-curl',       :github => 'r-uby-dev/mruby-curl', :branch => "v0.6.1"
   spec.add_dependency 'mruby-json',       :github => 'mattn/mruby-json'
   spec.add_dependency 'mruby-stringio',   :github => 'ksss/mruby-stringio'
-  spec.add_dependency 'mruby-process',    :github => '0x1eef/mruby-process', :branch => "v0.2.0"
-  spec.add_dependency 'mruby-chan',       :github => '0x1eef/mruby-chan', :branch => "v0.3.0"
+  spec.add_dependency 'mruby-process',    :github => 'bsdrobert/mruby-process', :branch => "v0.2.0"
+  spec.add_dependency 'mruby-chan',       :github => 'bsdrobert/mruby-chan', :branch => "v0.3.0"
+  spec.add_dependency 'mruby-command',    :github => 'bsdrobert/mruby-command', :branch=> "v0.2.0"
   spec.add_dependency 'mruby-task'
   spec.add_dependency 'mruby-io'
   spec.add_dependency 'mruby-time'
