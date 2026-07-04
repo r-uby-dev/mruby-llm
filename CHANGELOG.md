@@ -13,9 +13,13 @@
 > Changelog <br>
 > a [r.uby.dev](https://r.uby.dev) project
 
-## Unreleased
+## What's next
 
-Changes since `v0.1.0.beta.18`.
+Changes since `v0.1.0`
+
+None yet.
+
+## v0.1.0
 
 This release backports significant features from llm.rb to mruby-llm,
 and relicenses the project under the Business Source License (BSL).
