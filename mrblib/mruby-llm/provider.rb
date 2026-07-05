@@ -245,7 +245,7 @@ class LLM::Provider
   #  A tracer
   # @return [void]
   def tracer=(tracer)
-    @tracer = tracer
+    @tracer = tracer || LLM::Tracer::Null.new(self)
   end
 
   ##

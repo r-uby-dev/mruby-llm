@@ -320,6 +320,15 @@ module LLM
     end
 
     ##
+    # @param [LLM::Tracer, nil] other
+    #  A tracer, or nil.
+    # @return [void]
+    def tracer=(other)
+      @ctx.tracer = other
+      @tracer = other
+    end
+
+    ##
     # @return [LLM::Stream, #<<]
     #  Returns a stream object
     def stream

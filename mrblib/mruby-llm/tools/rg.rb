@@ -28,6 +28,8 @@ class LLM::Tool
     def validate!(patterns:, path:)
       if path == "/"
         raise RuntimeError, "you can't search from the root of the filesystem"
+      elsif patterns == ["."]
+        raise RuntimeError, "narrow your search"
       end
     end
 
