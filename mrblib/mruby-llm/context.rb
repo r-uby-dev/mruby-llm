@@ -587,9 +587,9 @@ module LLM
       returns = [self.returns, prompt].flatten.grep(LLM::Function::Return)
       cancelled = []
       [*message.extra.tool_calls].each do |tool|
-        next if returns.any? { _1.id == tool.id }
+        next if returns.any? { _1.id == tool[:id] }
         attrs = {cancelled: true, reason: "function call cancelled"}
-        cancelled << LLM::Function::Return.new(tool.id, tool.name, attrs)
+        cancelled << LLM::Function::Return.new(tool[:id], tool[:name], attrs)
       end
       messages << LLM::Message.new(@llm.tool_role, cancelled) unless cancelled.empty?
     end

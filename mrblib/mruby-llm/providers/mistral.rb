@@ -80,10 +80,49 @@ module LLM
     end
 
     ##
+    # Runs OCR on a remote image or document URL.
+    # @see https://docs.mistral.ai/api/endpoint/ocr#operation-ocr_v1_ocr_post Mistral OCR docs
+    # @param [String, nil] image_url
+    #  A remote HTTP(S) URL to the image
+    # @param [String, nil] document_url
+    #  A remote HTTP(S) URL to the document
+    # @param [String] model
+    #  The OCR model to use
+    # @param [Hash] params
+    #  Additional OCR parameters
+    # @raise [ArgumentError]
+    #  When both or neither of image_url and document_url are provided
+    # @return [LLM::Response]
+    def ocr(image_url: nil, document_url: nil, model: "mistral-ocr-latest", **params)
+      if [image_url, document_url].all?(&:nil?)
+        raise ArgumentError, "must provide one of: image_url, document_url"
+      elsif [image_url, document_url].compact.size > 1
+        raise ArgumentError, "must provide one of: image_url, document_url"
+      end
+      document = parse_document(image_url, document_url)
+      req = LLM::Transport::Request.post(path("/ocr"), headers)
+      req.body = LLM.json.dump({model:, document:}.merge!(params))
+      res, = execute(request: req, operation: "ocr", model:)
+      LLM::Response.new(res)
+    end
+
+    ##
     # Returns the default model for chat completions
     # @return [String]
     def default_model
       "mistral-large-latest"
+    end
+
+    private
+
+    ##
+    # @api private
+    def parse_document(image_url, document_url)
+      if image_url
+        {type: "image_url", image_url:}
+      elsif document_url
+        {type: "document_url", document_url:}
+      end
     end
   end
 end

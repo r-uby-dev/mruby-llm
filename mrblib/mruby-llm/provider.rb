@@ -23,7 +23,7 @@ class LLM::Provider
   #  Whether to enable the transport's persistence mode, if supported.
   # @param [LLM::Transport, nil] transport
   #  Optional transport override used to execute requests.
-  def initialize(key:, host:, port: 443, timeout: 60, ssl: true, base_path: "", persistent: false, transport: nil)
+  def initialize(key:, host:, port: 443, timeout: 180, ssl: true, base_path: "", persistent: false, transport: nil)
     @key = key
     @host = host
     @port = port
