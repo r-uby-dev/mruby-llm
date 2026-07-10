@@ -584,7 +584,7 @@ module LLM
     def repair!(messages, prompt)
       message = messages.last
       return unless message&.tool_call?
-      returns = self.returns + [*prompt].grep(LLM::Function::Return)
+      returns = [self.returns, prompt].flatten.grep(LLM::Function::Return)
       cancelled = []
       [*message.extra.tool_calls].each do |tool|
         next if returns.any? { _1.id == tool.id }
