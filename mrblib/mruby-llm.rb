@@ -63,6 +63,16 @@ module LLM
     LLM::MCP.new(**)
   end
 
+  ##
+  # @param [LLM::Provider] llm
+  #  A provider
+  # @param [Hash] params
+  #  Forwarded to LLM::Tracer::Logger
+  # @return [LLM::Tracer::Logger]
+  def self.logger(llm, **params)
+    LLM::Tracer::Logger.new(llm, params)
+  end
+
   def self.lock(name, &)
     @monitors[name].synchronize(&)
   end

@@ -106,10 +106,35 @@ module LLM
 
     ##
     # Returns the default model for chat completions
-    # @see https://ai.google.dev/gemini-api/docs/models#gemini-2.5-flash gemini-2.5-flash
+    # @see https://ai.google.dev/gemini-api/docs/models#gemini-31-flash-lite gemini-3.1-flash-lite
     # @return [String]
     def default_model
-      "gemini-2.5-flash"
+      "gemini-3.1-flash-lite"
+    end
+
+    ##
+    # @note
+    #  This method includes certain tools that require configuration
+    #  through a set of options that are easier to set through the
+    #  {LLM::Provider#server_tool LLM::Provider#server_tool} method.
+    # @see https://ai.google.dev/gemini-api/docs/google-search Gemini docs
+    # @return (see LLM::Provider#server_tools)
+    def server_tools
+      {
+        google_search: server_tool(:google_search),
+        code_execution: server_tool(:code_execution),
+        url_context: server_tool(:url_context)
+      }
+    end
+
+    ##
+    # A convenience method for performing a web search using the
+    # Google Search tool.
+    # @param query [String] The search query.
+    # @return [LLM::Response] The response from the LLM provider.
+    def web_search(query:)
+      ResponseAdapter.adapt(complete(query, tools: [server_tools[:google_search]]),
+                            type: :web_search)
     end
 
     ##
@@ -162,9 +187,11 @@ module LLM
       params = {role: :user, model: default_model}.merge!(params)
       tools  = resolve_tools(params.delete(:tools))
       config = adapt_generation_config(params.except(*except))
-      params = [config, adapt_tools(tools)].inject({}, &:merge!).compact
-      role, model, stream = [:role, :model, :stream].map { params.delete(_1) }
-      [params, stream, tools, role, model]
+      params = [params.except(:schema), config, adapt_tools(tools)].inject({}, &:merge!).compact
+      role, model, stream = params.delete(:role),
+                            params.delete(:model),
+                            LLM::Stream.try(params.delete(:stream))
+      [params.merge!(stream: stream.enabled?), stream, tools, role, model]
     end
 
     def build_complete_request(prompt, params, role, model, stream)

@@ -139,6 +139,19 @@ class LLM::Object < BasicObject
   end
 
   ##
+  # @param [Hash, #to_h] other
+  #  The hash to merge in place
+  # @return [LLM::Object]
+  #  Returns self
+  def merge!(other = UNDEFINED)
+    return SINGLETON.get(@h, :merge!) if other.equal?(UNDEFINED)
+    other = LLM::Hash.try_convert(other)
+    raise TypeError, "#{other} cannot be coerced into a Hash" unless other
+    @h.merge!(other)
+    self
+  end
+
+  ##
   # @param [#to_s, #to_sym] k
   #  The key name
   # @return [void]

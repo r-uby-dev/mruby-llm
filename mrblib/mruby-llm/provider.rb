@@ -204,6 +204,34 @@ class LLM::Provider
   end
 
   ##
+  # @note
+  #  This method might be outdated, and the {LLM::Provider#server_tool
+  #  LLM::Provider#server_tool} method can be used if a tool is not found
+  #  here.
+  # Returns all known tools provided by a provider.
+  # @return [String => LLM::ServerTool]
+  def server_tools
+    {}
+  end
+
+  ##
+  # @note
+  #   OpenAI, Anthropic, and Gemini provide platform-tools for things
+  #   like web search, and more.
+  # Returns a tool provided by a provider.
+  # @example
+  #   llm   = LLM.openai(key: ENV["KEY"])
+  #   tools = [llm.server_tool(:web_search)]
+  #   res   = llm.responses.create("Summarize today's news", tools:)
+  #   print res.output_text, "\n"
+  # @param [String, Symbol] name The name of the tool
+  # @param [Hash] options Configuration options for the tool
+  # @return [LLM::ServerTool]
+  def server_tool(name, options = {})
+    LLM::ServerTool.new(name, options, self)
+  end
+
+  ##
   # @return [Symbol]
   def user_role
     :user
@@ -354,7 +382,7 @@ class LLM::Provider
     (tools || []).map do |tool|
       if tool.respond_to?(:function)
         tool.function
-      elsif [LLM::Function, Hash].any? { _1 === tool }
+      elsif [LLM::Function, LLM::ServerTool, Hash].any? { _1 === tool }
         tool
       else
         raise TypeError, "#{tool.class} given as a tool but it is not recognized"

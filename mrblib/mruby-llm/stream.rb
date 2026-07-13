@@ -21,6 +21,32 @@ module LLM
   # also emit lifecycle callbacks like {#on_transform} or {#on_compaction}.
   class Stream
     ##
+    # This method will try to convert its argument into
+    # an instance of {LLM::Stream LLM::Stream} or a
+    # subclass of it.
+    #
+    # Acceptable inputs include: {LLM::Stream LLM::Stream}
+    # objects, IO objects who implement `#<<`, true, false,
+    # and nil. Anything else raises a TypeError.
+    #
+    # @raise [TypeError]
+    # @param [LLM::Stream, #<<, Boolean, NilClass] obj
+    # @return [LLM::Stream]
+    def self.try(obj, extra: {})
+      if LLM::Stream === obj
+        obj.tap { _1.extra.merge!(extra) }
+      elsif obj.respond_to?(:<<)
+        LLM::Stream::IO.new(obj).tap { _1.extra.merge!(extra) }
+      elsif obj == true
+        LLM::Stream.new.tap { _1.extra.merge!(extra) }
+      elsif obj.nil? || obj == false
+        LLM::Stream::Disabled.new.tap { _1.extra.merge!(extra) }
+      else
+        raise TypeError, "invalid stream object"
+      end
+    end
+
+    ##
     # Returns extra context associated with the current streamed request.
     # @return [Hash]
     def extra
@@ -32,6 +58,12 @@ module LLM
     # @return [LLM::Context, nil]
     def ctx
       extra[:ctx]
+    end
+
+    ##
+    # @return [Boolean]
+    def enabled?
+      true
     end
 
     ##

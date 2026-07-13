@@ -34,13 +34,12 @@ class LLM::Google
     end
 
     ##
-    # @param [Hash] params
+    # @param [Array<LLM::Function>] tools
     # @return [Hash]
     def adapt_tools(tools)
       return {} unless tools&.any?
-      functions = tools.grep(LLM::Function)
-      return {} if functions.empty?
-      {tools: [{functionDeclarations: functions.map { _1.adapt(self) }}]}
+      platform, functions = [tools.grep(LLM::ServerTool), tools.grep(LLM::Function)]
+      {tools: [*platform, {functionDeclarations: functions.map { _1.adapt(self) }}]}
     end
 
     ##
