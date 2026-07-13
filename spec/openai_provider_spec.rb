@@ -21,7 +21,7 @@ describe "LLM::OpenAI provider integration" do
       expect(request[:method]).must_equal "POST"
       expect(request[:path]).must_equal "/v1/chat/completions"
       expect(request[:headers]["authorization"]).must_equal "Bearer test-key"
-      expect(payload["model"]).must_equal "gpt-4.1"
+      expect(payload["model"]).must_equal "gpt-5.4-mini"
       expect(payload["messages"]).must_equal([
         {"role" => "user", "content" => [{"type" => "text", "text" => "Hello"}]}
       ])

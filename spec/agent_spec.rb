@@ -59,7 +59,7 @@ describe "LLM::Agent" do
       let(:agent) { agent_class.new(llm) }
 
       it "resolves the block against the agent instance" do
-        expect(agent.model).must_equal "gpt-4.1"
+        expect(agent.model).must_equal "gpt-5.4-mini"
       end
     end
 
@@ -67,7 +67,7 @@ describe "LLM::Agent" do
       let(:agent) { LLM::Agent.new(llm) }
 
       it "keeps the provider default model" do
-        expect(agent.model).must_equal "gpt-4.1"
+        expect(agent.model).must_equal "gpt-5.4-mini"
       end
     end
 
