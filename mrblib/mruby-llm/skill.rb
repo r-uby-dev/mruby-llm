@@ -63,8 +63,13 @@ module LLM
     # Load and parse the skill.
     # @return [LLM::Skill]
     def load!
-      path = ::File.join(@path, "SKILL.md")
-      parse(::File.read(path))
+      if ::File.file?(@path)
+        parse(::File.read(@path))
+      elsif ::File.directory?(@path)
+        parse(::File.read(::File.join(@path, "SKILL.md")))
+      else
+        raise LLM::Error, "'#{@path}' is neither a file or directory"
+      end
       self
     end
 
@@ -132,7 +137,7 @@ module LLM
     end
 
     def parse(content)
-      match = content.match(/\A---\s*\n(.*?)\n---\s*\n?/m)
+      match = content.match(/\A---\s*\n(.*?)\n---\s*\n?(.*)\z/m)
       unless match
         @instructions = content
         return
@@ -140,14 +145,18 @@ module LLM
       @frontmatter = LLM::Object.from(LLM::YAML.safe_load(match[1]) || {})
       @name = @frontmatter.name || @name
       @description = @frontmatter.description || @description
+      @instructions = match[2]
       @inherit_tools, @tools = parse_tools(@frontmatter.tools)
-      @instructions = content[match.end(0)..-1] || ""
     end
 
     def parse_tools(tools)
       case tools
       when String
-        tools == "inherit" ? [true, []] : raise_invalid_error!(tools)
+        case tools
+        when "inherit" then [true, []]
+        when "all", "*" then [false, LLM::Tool.registry]
+        else raise_invalid_error!(tools)
+        end
       when Array
         [false, tools.map { LLM::Tool.find_by_name!(_1) }]
       when NilClass

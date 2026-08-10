@@ -57,6 +57,18 @@ class LLM::Tool
     end
 
     ##
+    # Set default values for parameters.
+    # @param [Hash] defaults
+    # @return [LLM::Schema::Object]
+    def defaults(defaults)
+      lock do
+        function.params.tap do |schema|
+          defaults.each { |name, val| Utils.fetch(schema.properties, name).default(val) }
+        end
+      end
+    end
+
+    ##
     # @api private
     module Utils
       extend self

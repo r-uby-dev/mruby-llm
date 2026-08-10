@@ -19,7 +19,7 @@ class Agent < LLM::Agent
   def set_tools
     [
       LLM::Tool::Git, LLM::Tool::ReadFile,
-      LLM::Tool::Rg, LLM::Tool::SwapText,
+      LLM::Tool::Rg, LLM::Tool::EditFile,
       LLM::Tool::WriteFile
     ]
   end

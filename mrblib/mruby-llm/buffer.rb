@@ -70,6 +70,89 @@ module LLM
     end
 
     ##
+    # Returns the first message(s) in the buffer
+    # @param [Integer, nil] n
+    #  The number of messages to return
+    # @return [LLM::Message, Array<LLM::Message>, nil]
+    def first(n = nil)
+      n.nil? ? @messages.first : @messages.first(n)
+    end
+
+    ##
+    # Removes messages matching the block in-place.
+    # @yield [LLM::Message]
+    # @return [LLM::Buffer]
+    def reject!(&)
+      @messages.reject!(&)
+      self
+    end
+    alias_method :delete_if, :reject!
+
+    ##
+    # Keeps messages matching the block in-place.
+    # @yield [LLM::Message]
+    # @return [LLM::Buffer]
+    def select!(&)
+      @messages.select!(&)
+      self
+    end
+
+    ##
+    # Removes and returns the first message.
+    # @return [LLM::Message, nil]
+    def shift
+      @messages.shift
+    end
+
+    ##
+    # Removes all messages.
+    # @return [LLM::Buffer]
+    def clear
+      @messages.clear
+      self
+    end
+
+    ##
+    # Returns all elements after the first n.
+    # @param [Integer] n
+    #  The number of messages to skip
+    # @return [Array<LLM::Message>]
+    def drop(n)
+      @messages.drop(n)
+    end
+
+    ##
+    # Returns the first n elements without removing them.
+    # @param [Integer] n
+    #  The number of messages to return
+    # @return [Array<LLM::Message>]
+    def take(n)
+      @messages.take(n)
+    end
+
+    ##
+    # Slice a portion of the internal buffer in-place
+    # @return [void]
+    def slice!(...)
+      @messages.slice!(...)
+      nil
+    end
+
+    ##
+    # Pop the last element from the tail of the buffer
+    # @return [LLM::Message, nil]
+    def pop
+      @messages.pop
+    end
+
+    ##
+    # Returns a reversed copy of the internal array.
+    # @return [Array]
+    def reverse
+      @messages.reverse
+    end
+
+    ##
     # @param [[LLM::Message]] item
     #  A message to add to the buffer
     # @return [void]

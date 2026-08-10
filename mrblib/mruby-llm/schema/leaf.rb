@@ -8,6 +8,10 @@ class LLM::Schema
   # an example of how to create instances of {LLM::Schema::Leaf LLM::Schema::Leaf}
   # through its subclasses.
   class Leaf
+    ##
+    # @return [Integer, nil]
+    attr_accessor :index
+
     private
 
     def serialize(value)
@@ -29,6 +33,7 @@ class LLM::Schema
       @enum = nil
       @required = nil
       @const = nil
+      @index = nil
     end
 
     ##

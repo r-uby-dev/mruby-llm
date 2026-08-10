@@ -123,7 +123,8 @@ class LLM::Object < BasicObject
   # @return [Object]
   def fetch(k = UNDEFINED, *args, &b)
     return SINGLETON.get(@h, :fetch) if k.equal?(UNDEFINED)
-    @h.fetch(SINGLETON.key(@h, k), *args, &b)
+    key = SINGLETON.key(@h, k)
+    @h.fetch(key || k, *args, &b)
   end
 
   ##

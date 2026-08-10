@@ -17,6 +17,11 @@ class LLM::Schema
     # @return [LLM::Schema::Object]
     def initialize(properties)
       @properties = properties
+      i = 0
+      properties.each do |_key, val|
+        val.index = i
+        i += 1
+      end
     end
 
     ##
@@ -30,6 +35,7 @@ class LLM::Schema
     # Set a property
     # @return [void]
     def []=(key, val)
+      val.index = @properties.size
       properties[key.to_s] = val
     end
 

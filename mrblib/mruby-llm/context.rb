@@ -210,7 +210,7 @@ module LLM
     ##
     # Returns an array of functions that can be called
     # @return [Array<LLM::Function>]
-    def functions
+    def pending_functions
       return_ids = returns.map(&:id)
       guard = @guard[:klass].new(self)
       @messages
@@ -230,9 +230,9 @@ module LLM
     # This prefers queued streamed tool work when present, and otherwise
     # falls back to unresolved functions derived from the message history.
     # @return [Boolean]
-    def functions?
+    def pending_functions?
       pending = queue
-      (pending && !pending.empty?) || functions.any?
+      (pending && !pending.empty?) || pending_functions.any?
     end
 
     # Spawns a function through the context.
@@ -276,7 +276,7 @@ module LLM
         @queue = stream.queue
         @queue.wait
       else
-        tools  = except.empty? ? functions : functions - except
+        tools  = except.empty? ? pending_functions : pending_functions - except
         @queue = tools.task(strategy)
         returns = @queue.wait
         emit_tool_returns(tools, returns)
@@ -292,7 +292,7 @@ module LLM
     # This is inspired by Go's context cancellation model.
     # @return [nil]
     def interrupt!
-      pending = functions.to_a
+      pending = pending_functions.to_a
       queue&.interrupt!
       pending.each(&:interrupt!)
       llm.interrupt!(@owner)

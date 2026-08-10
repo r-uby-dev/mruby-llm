@@ -103,6 +103,7 @@ class LLM::MCP
   ensure
     stop
   end
+  alias_method :session, :run
 
   ##
   # Returns the tools provided by the MCP server.

@@ -118,7 +118,7 @@ describe "LLM::Guard" do
       end
     end
 
-    it "stamps the guard through ctx.functions" do
+    it "stamps the guard through ctx.pending_functions" do
       ctx = LLM::Context.new(provider, guard: blocking_guard)
       ctx.messages << LLM::Message.new("assistant", nil, {
         tools: [tool_class],

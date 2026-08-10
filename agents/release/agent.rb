@@ -19,7 +19,7 @@ class Agent < LLM::Agent
   end
 
   def set_tools
-    [LLM::Tool::Git, LLM::Tool::ReadFile, LLM::Tool::Rg, LLM::Tool::SwapText]
+    [LLM::Tool::Git, LLM::Tool::ReadFile, LLM::Tool::Rg, LLM::Tool::EditFile]
   end
 
   def set_tracer

@@ -20,7 +20,7 @@ class LLM::Tool
     private
 
     def spawn(path:)
-      LLM::Tool::Command
+      Command
         .new("mkdir")
         .argv("-p", path)
         .spawn

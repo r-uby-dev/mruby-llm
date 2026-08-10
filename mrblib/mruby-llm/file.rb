@@ -44,6 +44,13 @@ class LLM::File
   end
 
   ##
+  # @return [Boolean]
+  #  Returns true if the file exists on disk
+  def exist?
+    File.exist?(path)
+  end
+
+  ##
   # @return [Integer]
   #  Returns the size of the file in bytes
   def bytesize

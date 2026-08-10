@@ -25,7 +25,7 @@ class LLM::Tool
     private
 
     def spawn(action:, arguments:)
-      LLM::Tool::Command
+      Command
         .new("git")
         .argv(action)
         .argv(*[*arguments])

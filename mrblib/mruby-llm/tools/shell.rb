@@ -32,9 +32,9 @@ class LLM::Tool
     ##
     # @param [String] name
     # @param [Array<String>] arguments
-    # @return [LLM::Tool::Command]
+    # @return [Command]
     def spawn(name:, arguments:)
-      LLM::Tool::Command
+      Command
         .new(name)
         .argv(*[*arguments])
         .spawn

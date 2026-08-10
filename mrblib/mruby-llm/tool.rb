@@ -134,6 +134,35 @@ class LLM::Tool
   end
 
   ##
+  # Assign multiple tool properties at once.
+  # @example
+  #   class Tool < LLM::Tool
+  #     set name: "my-tool",
+  #         description: "my tool does this and that",
+  #         parameters: [
+  #           [:name, String , "this and that"],
+  #           [:age , Integer, "this and that"]
+  #         ],
+  #         required: %i[name],
+  #         defaults: {age: 42}
+  #   end
+  # @param [Hash] properties
+  # @return [void]
+  def self.set(properties)
+    properties.each do |key, value|
+      if key.to_s == "parameters"
+        value.each { |attributes| parameter(*attributes) }
+      else
+        if respond_to?(key)
+          public_send(key, value)
+        else
+          raise KeyError, "key not found: #{key}"
+        end
+      end
+    end
+  end
+
+  ##
   # Returns (or sets) the tool name
   # @param [String, nil] name The tool name
   # @return [String]

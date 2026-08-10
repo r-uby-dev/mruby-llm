@@ -1,0 +1,128 @@
+# frozen_string_literal: true
+
+module LLM
+  ##
+  # The {LLM::Tracer::PrettyLogger LLM::Tracer::PrettyLogger} class
+  # writes human-readable request and tool call logs to a console
+  # or file. Each event is a single line with the relevant context
+  # inline, no structured JSON.
+  #
+  # @example
+  #   llm = LLM.openai(key: ENV["KEY"])
+  #   llm.tracer = LLM::Tracer::PrettyLogger.new(llm)
+  #
+  # @example Writing to a file
+  #   llm.tracer = LLM::Tracer::PrettyLogger.new(llm, io: File.open("log.txt", "a"))
+  class Tracer::PrettyLogger < Tracer
+    ##
+    # @param (see LLM::Tracer#initialize)
+    def initialize(provider, options = {})
+      super
+      setup!(**options)
+    end
+
+    ##
+    # @param (see LLM::Tracer#on_request_start)
+    # @return [void]
+    def on_request_start(operation:, model: nil, **)
+      @start = Time.now.to_f
+      name = operation == "chat" ? "chat" : operation
+      @io.puts "#{timestamp} #{provider_name} #{name} (#{model || "default"})"
+    end
+
+    ##
+    # @param (see LLM::Tracer#on_request_finish)
+    # @return [void]
+    def on_request_finish(operation:, res:, model: nil, **)
+      elapsed = @start ? (Time.now.to_f - @start).round(2) : nil
+      tokens = format_tokens(res)
+      name = operation == "chat" ? "chat" : operation
+      parts = ["#{timestamp} #{provider_name} #{name} done"]
+      parts << tokens if tokens
+      parts << "#{elapsed}s" if elapsed
+      @io.puts parts.join(", ")
+    end
+
+    ##
+    # @param (see LLM::Tracer#on_request_error)
+    # @return [void]
+    def on_request_error(ex:, **)
+      @io.puts "#{timestamp} #{provider_name} error #{ex.class}: #{ex.message}"
+    end
+
+    ##
+    # @param (see LLM::Tracer#on_tool_start)
+    # @return [void]
+    def on_tool_start(id:, name:, arguments:, **)
+      @io.puts "#{timestamp} #{name}(#{format_arguments(arguments)})"
+    end
+
+    ##
+    # @param (see LLM::Tracer#on_tool_finish)
+    # @return [void]
+    def on_tool_finish(result:, **)
+      @io.puts "#{timestamp} #{result.name} -> #{format_value(result.value)}"
+    end
+
+    ##
+    # @param (see LLM::Tracer#on_tool_error)
+    # @return [void]
+    def on_tool_error(ex:, **)
+      @io.puts "#{timestamp} tool error #{ex.class}: #{ex.message}"
+    end
+
+    private
+
+    def setup!(io: $stderr)
+      @io = io
+      @start = nil
+    end
+
+    def timestamp
+      t = Time.now
+      format("%02d:%02d:%02d", t.hour, t.min, t.sec)
+    end
+
+    def format_tokens(res)
+      usage = res.usage
+      if usage.input_tokens and usage.output_tokens
+        "in=#{usage.input_tokens} out=#{usage.output_tokens}"
+      elsif usage.input_tokens
+        "in=#{usage.input_tokens}"
+      elsif usage.output_tokens
+        "out=#{usage.output_tokens}"
+      end
+    end
+
+    def format_arguments(args, max: 50)
+      return "" unless args
+      case args
+      when ::Hash, LLM::Object
+        result = args.map { |k, v| "#{k}: #{format_value(v)}" }.join(", ")
+      when Array
+        result = args.map { |v| format_value(v) }.join(", ")
+      else
+        result = args.inspect
+      end
+      result.size > max ? "#{result[0...max - 1]}..." : result
+    end
+
+    def format_value(value, max: 18)
+      case value
+      when String
+        value.size > max ? "#{value[0...max]}...".inspect : value.inspect
+      when Array
+        items = value.take(2).map { format_value(_1, max: 10) }
+        items << "..." if value.size > 2
+        "[#{items.join(", ")}]"
+      when ::Hash
+        "{...}"
+      when nil
+        "nil"
+      else
+        str = value.inspect
+        str.size > max ? "#{str[0...max]}..." : str
+      end
+    end
+  end
+end

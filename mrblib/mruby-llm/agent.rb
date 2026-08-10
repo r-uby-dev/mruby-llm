@@ -38,9 +38,91 @@ module LLM
   #   agent.talk("Run 'date'")
   class Agent
     ##
+    # @api private
+    UNDEFINED = Object.new
+
+    ##
     # Returns a provider
     # @return [LLM::Provider]
     attr_reader :llm
+
+    ##
+    # Bulk-assign class-level agent defaults from a Hash.
+    #
+    # Each key is resolved by calling the corresponding class method on the
+    # agent subclass. An error is raised for unknown keys so that typos are
+    # caught early.
+    #
+    # @example
+    #   class AdminAgent < LLM::Agent
+    #     set name: "admin",
+    #         instructions: "You are a system administrator",
+    #         model: "gpt-4.1-nano",
+    #         tools: [Shell, ReadFile]
+    #   end
+    #
+    # @param [Hash] properties
+    # @raise [KeyError] when a property key does not match a class-level accessor
+    # @return [void]
+    def self.set(properties)
+      properties.each do |key, value|
+        if respond_to?(key)
+          public_send(key, value)
+        else
+          raise KeyError, "key not found: #{key}"
+        end
+      end
+    end
+
+    ##
+    # Set or get an agent's name.
+    # @note
+    #  This method serves as a self-documenting string
+    #  and it is used by the REPL. It is optional but recommended.
+    # @param [String] name
+    #  The agent name
+    # @return [String]
+    #  Returns the agent's name
+    def self.name(name = UNDEFINED, &block)
+      if name.equal?(UNDEFINED)
+        if @name.nil?
+          name = to_s.split("::").last
+          @name = name.gsub(/([a-z])([A-Z])/, '\1-\2').gsub(/([A-Z]+)([A-Z][a-z])/, '\1-\2').downcase
+        else
+          @name
+        end
+      else
+        @name = block || name
+      end
+    end
+
+    ##
+    # Set or get an agent's description.
+    # @param [String] desc
+    #  The agent's description
+    # @return [String, nil]
+    #  Returns the agent's description
+    def self.description(desc = UNDEFINED, &block)
+      if desc.equal?(UNDEFINED)
+        @desc
+      else
+        @desc = block || desc
+      end
+    end
+
+    ##
+    # Set the file path where an agent's memory
+    # can be restored from, and written to.
+    # @param [String] path
+    #  The path to a file
+    # @return [String, nil]
+    def self.path(path = UNDEFINED, &block)
+      if path.equal?(UNDEFINED)
+        @path
+      else
+        @path = path || block
+      end
+    end
 
     ##
     # Set or get the default model
@@ -192,8 +274,8 @@ module LLM
     def initialize(llm, params = {})
       params = {}.merge!(params)
       @llm = llm
-      fields = %i[model skills schema tracer stream tools concurrency instructions confirm]
-      fields_ivar = %i[tracer concurrency instructions confirm]
+      fields = %i[name description path model skills schema tracer stream tools concurrency instructions confirm]
+      fields_ivar = %i[name description path tracer concurrency instructions confirm]
       fields.each do |field|
         resolvable = params.key?(field) ? params.delete(field) : self.class.public_send(field)
         resolve_symbol = !%i[concurrency].include?(field)
@@ -208,6 +290,29 @@ module LLM
         end
       end
       @ctx = LLM::Context.new(llm, {guard: LLM::Guard::Loop}.merge(params))
+      @path && ::File.exist?(@path) ? @ctx.restore(path: @path) : nil
+    end
+
+    ##
+    # Returns the agent's name
+    # @return [String]
+    def name
+      @name
+    end
+
+    ##
+    # Returns a file path where an agent's memory is
+    # restored from, and written to after each turn.
+    # @return [String, nil]
+    def path
+      @path
+    end
+
+    ##
+    # Returns the agent's description
+    # @return [String, nil]
+    def description
+      @description
     end
 
     ##
@@ -227,14 +332,18 @@ module LLM
     #   response = agent.talk("Hello, what is your name?")
     #   puts response.choices[0].content
     def talk(prompt, params = {})
-      run_loop(prompt, params, :talk)
+      res = run_loop(prompt, params, :talk)
+      @path ? @ctx.save(path: @path) : nil
+      res
     end
     alias_method :chat, :talk
 
     ##
     # @see LLM::Context#ask
     def ask(prompt, params = {})
-      run_loop(prompt, params, :ask)
+      res = run_loop(prompt, params, :ask)
+      @path ? @ctx.save(path: @path) : nil
+      res
     end
 
     ##
@@ -245,8 +354,8 @@ module LLM
 
     ##
     # @return [Array<LLM::Function>]
-    def functions
-      @tracer ? @llm.with_tracer(@tracer) { @ctx.functions } : @ctx.functions
+    def pending_functions
+      @tracer ? @llm.with_tracer(@tracer) { @ctx.pending_functions } : @ctx.pending_functions
     end
 
     ##
@@ -393,7 +502,7 @@ module LLM
     ##
     # @return [String]
     def inspect
-      "#<#{self.class.name}:0x#{object_id.to_s(16)} " \
+      "#<#{LLM::Utils.object_id(self)} " \
       "@llm=#{@llm.class}, @mode=#{mode.inspect}, @messages=#{messages.inspect}>"
     end
 
@@ -462,10 +571,10 @@ module LLM
     def call_functions
       strategy = concurrency || :sequential
       return wait(strategy) unless @confirm&.any?
-      confirmables = @ctx.functions.select { @confirm.include?(_1.name.to_s) }
+      confirmables = @ctx.pending_functions.select { @confirm.include?(_1.name.to_s) }
       results = confirmables.map { method(:on_tool_confirmation).call(_1, strategy) }
       @ctx.method(:emit_tool_returns).call(confirmables, results)
-      (@ctx.functions - confirmables).any? ? [*results, *wait(strategy, except: confirmables)] : results
+      (@ctx.pending_functions - confirmables).any? ? [*results, *wait(strategy, except: confirmables)] : results
     end
 
     ##
@@ -479,13 +588,13 @@ module LLM
         stream = params[:stream] || @ctx.params[:stream]
         stream.extra[:concurrency] = concurrency if LLM::Stream === stream
         res = talk.call(apply_instructions(prompt), params)
-        while @ctx.functions?
+        while @ctx.pending_functions?
           if max
             max.times do
-              break unless @ctx.functions?
+              break unless @ctx.pending_functions?
               res = talk.call(call_functions, params)
             end
-            res = talk.call(@ctx.functions.map(&:rate_limit), params) if @ctx.functions?
+            res = talk.call(@ctx.pending_functions.map(&:rate_limit), params) if @ctx.pending_functions?
           else
             res = talk.call(call_functions, params)
           end

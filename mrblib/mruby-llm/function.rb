@@ -176,6 +176,7 @@ class LLM::Function
     @runner = klass || b
   end
   alias_method :register, :define
+  alias_method :def, :define
 
   ##
   # Call the function
@@ -191,7 +192,7 @@ class LLM::Function
   #
   # @example
   #   # As a group
-  #   ctx.talk(ctx.functions.wait(:sequential))
+  #   ctx.talk(ctx.pending_functions.wait(:sequential))
   #
   #   # As a task
   #   task = tool.task(:task)
@@ -237,7 +238,7 @@ class LLM::Function
   #   llm = LLM.openai(key: ENV["KEY"])
   #   ctx = LLM::Context.new(llm, tools: [fn1, fn2])
   #   ctx.talk "I want to run the functions"
-  #   ctx.talk ctx.functions.map(&:cancel)
+  #   ctx.talk ctx.pending_functions.map(&:cancel)
   # @return [LLM::Function::Return]
   def cancel(reason: "function call cancelled")
     Return.new(id, name, {cancelled: true, reason:})

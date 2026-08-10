@@ -112,33 +112,33 @@ describe "LLM::Context" do
     end
 
     it "exposes pending functions" do
-      expect(ctx.functions.empty?).must_equal false
-      expect(ctx.functions?).must_equal true
+      expect(ctx.pending_functions.empty?).must_equal false
+      expect(ctx.pending_functions?).must_equal true
     end
 
     it "calls the function" do
-      ctx.talk ctx.functions[0].call
-      expect(ctx.functions).must_be_empty
-      expect(ctx.functions?).must_equal false
+      ctx.talk ctx.pending_functions[0].call
+      expect(ctx.pending_functions).must_be_empty
+      expect(ctx.pending_functions?).must_equal false
     end
 
     it "calls the functions" do
-      ctx.talk ctx.functions.map(&:call)
-      expect(ctx.functions).must_be_empty
+      ctx.talk ctx.pending_functions.map(&:call)
+      expect(ctx.pending_functions).must_be_empty
     end
 
     it "waits for functions through :sequential" do
       ctx.talk ctx.wait(:sequential)
-      expect(ctx.functions).must_be_empty
+      expect(ctx.pending_functions).must_be_empty
     end
 
     it "includes a message with a return value" do
-      ctx.talk ctx.functions.map(&:call)
+      ctx.talk ctx.pending_functions.map(&:call)
       expect(ctx.messages.select(&:tool_return?).size).must_equal 1
     end
 
     it "returns the final assistant answer after the tool loop" do
-      res = ctx.talk ctx.functions.map(&:call)
+      res = ctx.talk ctx.pending_functions.map(&:call)
       expect(res.content).must_equal "Today's date is August 24, 2025."
       expect(ctx.messages.last.content).must_equal "Today's date is August 24, 2025."
     end
@@ -192,8 +192,8 @@ describe "LLM::Context" do
     end
 
     it "calls the function(s)" do
-      res = ctx.talk ctx.functions.map(&:call)
-      expect(ctx.functions).must_be_empty
+      res = ctx.talk ctx.pending_functions.map(&:call)
+      expect(ctx.pending_functions).must_be_empty
       expect(res.content).must_equal "Today's date is August 24, 2025."
       expect(ctx.messages.last.content).must_equal "Today's date is August 24, 2025."
     end

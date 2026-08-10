@@ -102,6 +102,7 @@ MRuby::Gem::Specification.new('mruby-llm') do |spec|
     mrblib/mruby-llm/eventhandler.rb
     mrblib/mruby-llm/tracer.rb
     mrblib/mruby-llm/tracer/logger.rb
+    mrblib/mruby-llm/tracer/pretty_logger.rb
     mrblib/mruby-llm/tracer/null.rb
     mrblib/mruby-llm/provider.rb
     mrblib/mruby-llm/provider/transport.rb
@@ -200,13 +201,15 @@ MRuby::Gem::Specification.new('mruby-llm') do |spec|
     mrblib/mruby-llm/tool/param.rb
     mrblib/mruby-llm/tool.rb
     mrblib/mruby-llm/tools/chdir.rb
+    mrblib/mruby-llm/tools/edit-file.rb
     mrblib/mruby-llm/tools/git.rb
+    mrblib/mruby-llm/tools/ls.rb
     mrblib/mruby-llm/tools/mkdir.rb
     mrblib/mruby-llm/tools/pwd.rb
     mrblib/mruby-llm/tools/read_file.rb
     mrblib/mruby-llm/tools/rg.rb
     mrblib/mruby-llm/tools/shell.rb
-    mrblib/mruby-llm/tools/swap_text.rb
+    mrblib/mruby-llm/tools/which.rb
     mrblib/mruby-llm/tools/write_file.rb
     mrblib/mruby-llm/skill.rb
   ].map { File.expand_path(_1, __dir__) }
