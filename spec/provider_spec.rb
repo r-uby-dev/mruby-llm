@@ -58,6 +58,63 @@ describe "LLM::Provider" do
       expect(provider.key?).must_equal true
     end
   end
+
+  context "#build_messages" do
+    let(:provider) { provider_class.new(key: "test", host: "example.com", transport:) }
+    let(:history) { LLM::Message.new("user", "hi") }
+
+    it "wraps a string prompt with the given role" do
+      messages = provider.build_messages("hello", {}, :user)
+      expect(messages.size).must_equal 1
+      expect(messages[0]).must_be_instance_of LLM::Message
+      expect(messages[0].role).must_equal "user"
+      expect(messages[0].content).must_equal "hello"
+    end
+
+    it "prepends history from the params key" do
+      params = {messages: [history]}
+      messages = provider.build_messages("hello", params, :user)
+      expect(messages.size).must_equal 2
+      expect(messages[0]).must_equal history
+      expect(messages[1].content).must_equal "hello"
+      expect(params.key?(:messages)).must_equal false
+    end
+
+    it "is idempotent for message arrays" do
+      messages = [LLM::Message.new("user", "a"), LLM::Message.new("assistant", "b")]
+      expect(provider.build_messages(messages, {}, :user)).must_equal messages
+    end
+
+    it "is idempotent for a single message" do
+      message = LLM::Message.new("user", "a")
+      expect(provider.build_messages(message, {}, :user)).must_equal [message]
+    end
+
+    it "expands a prompt into its messages" do
+      prompt = LLM::Prompt.new(provider) do
+        _1.user "a"
+        _1.system "b"
+      end
+      messages = provider.build_messages(prompt, {}, :user)
+      expect(messages.size).must_equal 2
+      expect(messages[0].role).must_equal "user"
+      expect(messages[1].role).must_equal "system"
+    end
+
+    it "uses the key for responses-style input" do
+      params = {input: [history]}
+      messages = provider.build_messages("hello", params, :user, key: :input)
+      expect(messages.size).must_equal 2
+      expect(messages[0]).must_equal history
+      expect(params.key?(:input)).must_equal false
+    end
+
+    it "wraps a mixed array as a single message" do
+      messages = provider.build_messages([history, "tail"], {}, :user)
+      expect(messages.size).must_equal 1
+      expect(messages[0].content).must_equal [history, "tail"]
+    end
+  end
 end
 
 Minitest.run(ARGV) || exit(1)

@@ -19,6 +19,8 @@ MRuby::Gem::Specification.new('mruby-llm') do |spec|
     mrblib/mruby-llm/guard.rb
     mrblib/mruby-llm/guard/null.rb
     mrblib/mruby-llm/guard/loop.rb
+    mrblib/mruby-llm/transformer.rb
+    mrblib/mruby-llm/transformer/null.rb
     mrblib/mruby-llm/hash.rb
     mrblib/mruby-llm/utils.rb
     mrblib/mruby-llm/json.rb

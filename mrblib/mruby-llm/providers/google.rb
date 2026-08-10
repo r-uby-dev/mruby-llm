@@ -199,18 +199,10 @@ module LLM
       model.respond_to?(:id) ? model.id : model
       path = ["/v1beta/models/#{model}", action].join(":")
       req  = LLM::Transport::Request.post(path, headers)
-      messages = build_complete_messages(prompt, params, role)
+      messages = build_messages(prompt, params, role)
       body = LLM.json.dump({contents: adapt(messages)}.merge!(params))
       transport.set_body_stream(req, StringIO.new(body))
       req
-    end
-
-    def build_complete_messages(prompt, params, role)
-      if LLM::Prompt === prompt
-        [*(params.delete(:messages) || []), *prompt.to_a]
-      else
-        [*(params.delete(:messages) || []), LLM::Message.new(role, prompt)]
-      end
     end
   end
 end

@@ -40,8 +40,13 @@ class LLM::OpenAI
       role, stream = params.delete(:role), params.delete(:stream)
       params[:stream] = true if @provider.streamable?(stream) || stream == true
       req = LLM::Transport::Request.post(path("/responses"), headers)
-      messages = build_complete_messages(prompt, params, role)
+      messages = @provider.build_messages(prompt, params, role, key: :input)
       @provider.tracer.set_request_metadata(user_input: extract_user_input(messages, fallback: prompt))
+      ##
+      # The input is derived from `prompt`/`messages` above; a
+      # stale `:input` passed in params (eg by LLM::Context) must
+      # not overwrite it in the request body.
+      params.delete(:input)
       body = LLM.json.dump({input: [adapt(messages, mode: :response)].flatten}.merge!(params))
       transport.set_body_stream(req, StringIO.new(body))
       res, span, tracer = execute(request: req, stream:, stream_parser:, operation: "chat", model: params[:model])
@@ -86,14 +91,6 @@ class LLM::OpenAI
 
     [:path, :headers, :execute, :transport, :resolve_tools].each do |m|
       define_method(m) { |*args, **kwargs, &b| @provider.send(m, *args, **kwargs, &b) }
-    end
-
-    def build_complete_messages(prompt, params, role)
-      if LLM::Prompt === prompt
-        [*(params.delete(:input) || []), *prompt]
-      else
-        [*(params.delete(:input) || []), LLM::Message.new(role, prompt)]
-      end
     end
 
     def adapt_schema(params)

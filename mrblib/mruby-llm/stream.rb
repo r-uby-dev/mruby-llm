@@ -141,19 +141,17 @@ module LLM
 
     ##
     # Called before a context transformer rewrites a prompt.
-    # @param [LLM::Context] ctx
-    # @param [#call] transformer
+    # @param [LLM::Transformer] transformer
     # @return [nil]
-    def on_transform(ctx, transformer)
+    def on_transform(transformer)
       nil
     end
 
     ##
     # Called after a context transformer finishes rewriting a prompt.
-    # @param [LLM::Context] ctx
-    # @param [#call] transformer
+    # @param [LLM::Transformer] transformer
     # @return [nil]
-    def on_transform_finish(ctx, transformer)
+    def on_transform_finish(transformer)
       nil
     end
 

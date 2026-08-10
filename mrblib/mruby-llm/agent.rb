@@ -190,6 +190,7 @@ module LLM
     # @option params [LLM::Tracer, Proc, nil] :tracer Optional tracer override for this agent instance
     # @option params [Symbol, nil] :concurrency Defaults to the agent class concurrency
     def initialize(llm, params = {})
+      params = {}.merge!(params)
       @llm = llm
       fields = %i[model skills schema tracer stream tools concurrency instructions confirm]
       fields_ivar = %i[tracer concurrency instructions confirm]

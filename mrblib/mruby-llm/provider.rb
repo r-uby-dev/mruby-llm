@@ -36,6 +36,42 @@ class LLM::Provider
   end
 
   ##
+  # Builds the outgoing message array for a turn. Normalizes the
+  # prompt into one or more {LLM::Message} objects and prepends
+  # the existing history.
+  #
+  # The method is idempotent. If the prompt is already an
+  # {LLM::Message} or an array of {LLM::Message}s (ie it was built
+  # by a previous call and possibly transformed), it is returned
+  # as-is without rebuilding.
+  #
+  # @param [String, Array, LLM::Message, LLM::Prompt] prompt
+  # @param [Hash] params
+  #  Turn params. The history is taken from `params[:messages]`.
+  # @param [Symbol] role
+  #  The role to assign to a raw prompt
+  # @param [Symbol] key
+  #  The params key that holds the history (`:messages` for chat
+  #  completions, `:input` for the responses API).
+  # @return [Array<LLM::Message>]
+  def build_messages(prompt, params, role, key: :messages)
+    case prompt
+    when LLM::Message
+      [prompt]
+    when Array
+      if prompt.all? { LLM::Message === _1 }
+        prompt
+      else
+        [*(params.delete(key) || []), LLM::Message.new(role, prompt)]
+      end
+    when LLM::Prompt
+      [*(params.delete(key) || []), *prompt.to_a]
+    else
+      [*(params.delete(key) || []), LLM::Message.new(role, prompt)]
+    end
+  end
+
+  ##
   # Returns an inspection of the provider object
   # @return [String]
   # @note The secret key is redacted in inspect for security reasons

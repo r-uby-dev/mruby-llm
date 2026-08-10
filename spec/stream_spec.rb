@@ -4,7 +4,7 @@ describe "LLM::Stream" do
   let(:stream) { LLM::Stream.new }
   let(:ctx) { LLM::Context.new(LLM.openai(key: "test"), model: "gpt-4.1") }
   let(:compactor) { LLM::Compactor.new(ctx) }
-  let(:transformer) { Object.new }
+  let(:transformer) { LLM::Transformer::Null.new(ctx) }
   let(:tool) do
     LLM::Function.new("system").tap do |fn|
       fn.id = "call_1"
@@ -55,13 +55,13 @@ describe "LLM::Stream" do
 
   describe "#on_transform" do
     it "returns nil" do
-      expect(stream.on_transform(ctx, transformer)).must_be_nil
+      expect(stream.on_transform(transformer)).must_be_nil
     end
   end
 
   describe "#on_transform_finish" do
     it "returns nil" do
-      expect(stream.on_transform_finish(ctx, transformer)).must_be_nil
+      expect(stream.on_transform_finish(transformer)).must_be_nil
     end
   end
 

@@ -119,19 +119,11 @@ module LLM
     end
 
     def build_complete_request(prompt, params, role)
-      messages = build_complete_messages(prompt, params, role)
+      messages = build_messages(prompt, params, role)
       body = LLM.json.dump({messages: [adapt(messages)].flatten}.merge!(params))
       req = LLM::Transport::Request.post("/api/chat", headers)
       transport.set_body_stream(req, StringIO.new(body))
       req
-    end
-
-    def build_complete_messages(prompt, params, role)
-      if LLM::Prompt === prompt
-        [*(params.delete(:messages) || []), *prompt.to_a]
-      else
-        [*(params.delete(:messages) || []), LLM::Message.new(role, prompt)]
-      end
     end
   end
 end
