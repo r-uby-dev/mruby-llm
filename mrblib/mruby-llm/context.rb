@@ -73,13 +73,21 @@ module LLM
     #  not only those listed here.
     # @option params [Symbol] :mode Defaults to :completions
     # @option params [String] :model Defaults to the provider's default model
+    # @option params [Class<LLM::Compactor>, nil] :compactor
+    #   A compactor class to use for context compaction. Defaults to
+    #   {LLM::Compactor::Null}.
+    # @option params [Hash] :compactor_options
+    #   Options passed to the compactor's `call` method. Defaults to `{}`.
     # @option params [Array<LLM::Function>, nil] :tools Defaults to nil
     # @option params [Array<String>, nil] :skills Defaults to nil
     def initialize(llm, params = {})
       params = {}.merge!(params)
       @llm = llm
       @mode = params.delete(:mode) || :completions
-      @compactor = params.delete(:compactor)
+      @compactor = {
+        klass: params.delete(:compactor) || LLM::Compactor::Null,
+        options: params.delete(:compactor_options) || {}
+      }
       @transformer = {
         klass: params.delete(:transformer) || LLM::Transformer::Null,
         options: params.delete(:transformer_options) || {}
@@ -96,20 +104,9 @@ module LLM
 
     ##
     # Returns a context compactor
-    # This feature is inspired by the compaction approach developed by
-    # General Intelligence Systems.
     # @return [LLM::Compactor]
     def compactor
-      @compactor = LLM::Compactor.new(self, @compactor || {}) unless LLM::Compactor === @compactor
-      @compactor
-    end
-
-    ##
-    # Sets a context compactor or compactor config
-    # @param [LLM::Compactor, Hash, nil] compactor
-    # @return [LLM::Compactor, Hash, nil]
-    def compactor=(compactor)
-      @compactor = compactor
+      @compactor[:klass]
     end
 
     ##
@@ -165,7 +162,7 @@ module LLM
     #   puts res.messages[0].content
     def talk(prompt, params = {})
       @owner = @llm.request_owner
-      compactor.compact!(prompt) if compactor.compact?(prompt)
+      @compactor[:klass].new(self).call(**@compactor[:options])
       repair!(@messages, prompt)
       prompt, params, res = mode == :responses ? respond(prompt, params) : complete(prompt, params)
       self.compacted = false

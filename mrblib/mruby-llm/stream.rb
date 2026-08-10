@@ -157,19 +157,17 @@ module LLM
 
     ##
     # Called before a context compaction starts.
-    # @param [LLM::Context] ctx
     # @param [LLM::Compactor] compactor
     # @return [nil]
-    def on_compaction(ctx, compactor)
+    def on_compaction(compactor)
       nil
     end
 
     ##
     # Called after a context compaction finishes.
-    # @param [LLM::Context] ctx
     # @param [LLM::Compactor] compactor
     # @return [nil]
-    def on_compaction_finish(ctx, compactor)
+    def on_compaction_finish(compactor)
       nil
     end
 

@@ -3,7 +3,7 @@
 describe "LLM::Stream" do
   let(:stream) { LLM::Stream.new }
   let(:ctx) { LLM::Context.new(LLM.openai(key: "test"), model: "gpt-4.1") }
-  let(:compactor) { LLM::Compactor.new(ctx) }
+  let(:compactor) { LLM::Compactor::Null.new(ctx) }
   let(:transformer) { LLM::Transformer::Null.new(ctx) }
   let(:tool) do
     LLM::Function.new("system").tap do |fn|
@@ -49,7 +49,7 @@ describe "LLM::Stream" do
 
   describe "#on_compaction" do
     it "returns nil" do
-      expect(stream.on_compaction(ctx, compactor)).must_be_nil
+      expect(stream.on_compaction(compactor)).must_be_nil
     end
   end
 
@@ -67,7 +67,7 @@ describe "LLM::Stream" do
 
   describe "#on_compaction_finish" do
     it "returns nil" do
-      expect(stream.on_compaction_finish(ctx, compactor)).must_be_nil
+      expect(stream.on_compaction_finish(compactor)).must_be_nil
     end
   end
 
