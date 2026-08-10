@@ -56,10 +56,6 @@ module LLM
   ContextWindowError = Class.new(InvalidRequestError)
 
   ##
-  # When stuck in a tool call loop
-  ToolLoopError = Class.new(Error)
-
-  ##
   # When a request is interrupted
   Interrupt = Class.new(Error)
 

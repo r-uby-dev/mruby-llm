@@ -399,6 +399,62 @@ describe "Phase J backports" do
       expect(mcp).must_respond_to :session
     end
   end
+
+  describe "LLM::Function#budget_spent" do
+    let(:fn) do
+      LLM.function(:echo) do |f|
+        f.name "echo"
+      end.tap { _1.id = "call_1" }
+    end
+
+    it "returns an in-band budget spent error" do
+      result = fn.budget_spent
+      expect(result).must_be_instance_of LLM::Function::Return
+      expect(result.value[:error]).must_equal true
+      expect(result.value[:type]).must_equal "LLM::BudgetSpentError"
+      expect(result.value[:message]).must_include "budget"
+    end
+  end
+
+  describe "LLM::Agent.tool_budget" do
+    it "defaults to nil (disabled)" do
+      expect(LLM::Agent.tool_budget).must_be_nil
+    end
+
+    it "is settable as a class DSL" do
+      agent_class = Class.new(LLM::Agent) { tool_budget 5 }
+      expect(agent_class.tool_budget).must_equal 5
+    end
+
+    it "applies the class budget to agent instances" do
+      agent_class = Class.new(LLM::Agent) { tool_budget 5 }
+      agent = agent_class.new(llm)
+      expect(agent.instance_variable_get(:@tool_budget)).must_equal 5
+    end
+  end
+
+  describe "LLM::Agent#compacted?" do
+    it "reflects the wrapped context's compaction state" do
+      agent = LLM::Agent.new(llm)
+      expect(agent.compacted?).must_be_nil
+      agent.instance_variable_get(:@ctx).compacted = true
+      expect(agent.compacted?).must_equal true
+    end
+  end
+
+  describe "OpenAI subclass host forwarding" do
+    it "forwards host: to the provider base for OpenAI subclasses" do
+      transport = LLM::Test::Transport.new(root: root)
+      {
+        LLM::DeepInfra => "api.deepinfra.com",
+        LLM::Mistral => "api.mistral.ai",
+        LLM::Moonshot => "api.moonshot.ai"
+      }.each do |klass, host|
+        provider = klass.new(key: "test-key", transport: transport)
+        expect(provider.instance_variable_get(:@host)).must_equal host
+      end
+    end
+  end
 end
 
 Minitest.run(ARGV) || exit(1)

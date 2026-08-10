@@ -17,7 +17,195 @@
 
 Changes since `v0.1.0`
 
-None yet.
+This release backports the llm.rb concurrency overhaul, the
+`LLM::Guard` / `LLM::Transformer` / `LLM::Compactor` class hierarchies,
+the `LLM::Agent` and tooling DSLs, and a wide range of API additions
+and fixes that bring mruby-llm up to parity with llm.rb v14.0.0.
+
+### Breaking
+
+* **Rename `Context#functions` to `pending_functions`** <br>
+  `LLM::Context#functions` and `#functions?` are renamed to
+  `pending_functions` / `pending_functions?` to match llm.rb. The old
+  names are removed; `LLM::Message#functions` is unchanged.
+
+* **Rename the `:call` strategy to `:sequential`** <br>
+  The `:call` execution strategy is renamed to `:sequential`, and
+  `Function#spawn` / `Array#spawn` are superseded by
+  `Function#task(strategy)` / `Array#task(strategy)`, which build
+  strategy tasks and groups for `:sequential`, `:task`, and `:fork`.
+  The old `spawn` methods remain as deprecated aliases.
+
+* **Replace the transformer interface** <br>
+  The `transformer=` setter and 3-argument `call(ctx, prompt, params)`
+  interface are replaced by the `LLM::Transformer` class hierarchy.
+  Configure a transformer class through `transformer:` and options
+  through `transformer_options:`.
+
+* **Replace the compactor interface** <br>
+  The single-class `LLM::Compactor` (LLM-based summarization) is
+  replaced by the `LLM::Compactor::Truncate` / `Compactor::Null`
+  strategies. Configure a compactor class through `compactor:` and
+  options through `compactor_options:`.
+
+* **Replace `LLM::LoopGuard` with the `LLM::Guard` class hierarchy** <br>
+  `LLM::Guard` is a new superclass for context-level supervisors, with
+  `LLM::Guard::Loop` (replacing `LLM::LoopGuard`) and `LLM::Guard::Null`
+  as the built-in implementations. Guards now intercept individual tool
+  calls: `call(function:)` returns an `LLM::Function::Return` (or nil)
+  instead of a warning string for the whole batch. `LLM::Agent` enables
+  `LLM::Guard::Loop` by default.
+
+* **Rename `Function#rate_limit` to `Function#budget_spent`** <br>
+  The in-band type changes to `"LLM::BudgetSpentError"`, and
+  `LLM::ToolLoopError` is dropped from `error.rb`.
+
+* **Rename `LLM::Tool::SwapText` to `LLM::Tool::EditFile`** <br>
+  The tool class is renamed to match llm.rb; the old name is removed.
+
+* **Drop `LLM::GuardError`** <br>
+  The constant was never raised as an exception; guarded tool returns
+  now use the string `"guard_error"` as their error type.
+
+### Add
+
+* **Add the llm.rb concurrency model** <br>
+  Tool execution is rebuilt around two abstract base classes —
+  `LLM::Function::Task` and `LLM::Function::Group` — with lazy
+  `spawn`/`wait` separation, a `group_class` contract, and three
+  strategies: `:sequential` (direct calls), `:task` (cooperative
+  scheduling through mruby-task), and `:fork` (child processes).
+  `Array#wait(strategy)` returns the waited values, and
+  `LLM::Stream::Queue#wait` groups queued work by `group_class`. This
+  fixes two latent defects: `:task` waits from the root task no longer
+  raise `"join can only be called from running task"`, and
+  `Array#wait` no longer returns the group instead of the values.
+
+* **Add the `LLM::Guard` class hierarchy** <br>
+  `LLM::Guard` / `Guard::Null` / `Guard::Loop` with per-function
+  interception. `LLM::Function` gains `guard` and `return`; the guard is
+  stamped on functions by `Context#pending_functions` and every stream
+  parser, and each strategy task short-circuits on a guarded result
+  without running the tool.
+
+* **Add `LLM::Transformer`** <br>
+  `LLM::Transformer` / `Transformer::Null` rewrite the most recent
+  message before it is sent to the provider. `Context#transform` builds
+  messages through `Provider#build_messages` and fires single-argument
+  `on_transform` / `on_transform_finish` stream callbacks.
+
+* **Add `LLM::Provider#build_messages`** <br>
+  A single idempotent message builder that normalizes a prompt into
+  `LLM::Message` objects and prepends history, replacing the five
+  per-provider `build_complete_messages` implementations.
+
+* **Add the `LLM::Compactor` strategies** <br>
+  `LLM::Compactor::Truncate` drops the oldest messages (with a `keep:`
+  count or percentage), and `Compactor::Null` is the no-op default.
+  Stream callbacks are single-argument.
+
+* **Add bulk-assignment DSLs** <br>
+  `LLM::Tool.set`, `LLM::Tool::Param#defaults`, and `LLM::Agent.set`
+  let classes assign multiple name/description/parameter/option values
+  in one call.
+
+* **Add `LLM::Agent` class attributes** <br>
+  `Agent.name`, `Agent.description`, and `Agent.path` (with automatic
+  session persistence when `path` is set), plus `Agent#compacted?`
+  delegating to the wrapped context.
+
+* **Add `LLM::Tracer::PrettyLogger`** <br>
+  A human-readable, single-line request and tool-call logger to
+  `$stderr` (or an `io:` option).
+
+* **Add built-in tools** <br>
+  `LLM::Tool::Ls` (directory listing with glob patterns, shelling out to
+  `find`), `LLM::Tool::Which` (command lookup on PATH), and
+  `LLM::Tool::EditFile` (renamed from `SwapText`).
+
+* **Extend skills** <br>
+  `LLM::Skill.load` accepts a file path in addition to a directory, and
+  the frontmatter `tools:` key accepts `all` / `"*"` to load the full
+  tool registry.
+
+* **Extend `LLM::Buffer`** <br>
+  Add the array-like methods `first`, `reject!` (alias `delete_if`),
+  `select!`, `shift`, `clear`, `drop`, `take`, `slice!`, `reverse`, and
+  `pop`.
+
+* **Add small API surface from llm.rb** <br>
+  `LLM::Function#return` and `LLM::Function#def`, `LLM::File#exist?`,
+  `LLM::MCP#session` (alias of `#run`), `LLM::NotFoundError` (raised by
+  provider error handlers on HTTP 404), and `LLM::Schema::Leaf#index`
+  for property ordering.
+
+* **Add `LLM::Agent.tool_budget` and `LLM::Function#budget_spent`** <br>
+  Replace the `tool_attempts` run-loop parameter (default 25) with the
+  `Agent.tool_budget` class DSL (default `nil`, disabled) and rename
+  `Function#rate_limit` to `Function#budget_spent`. Once the budget is
+  spent, the agent sends an in-band advisory message
+  (`"LLM::BudgetSpentError"`) back through the model and keeps the loop
+  in-band.
+
+* **Expand `LLM::Cost` and `LLM::Usage`** <br>
+  `Cost` grows from 2 to 8 fields (input/output, input/output audio,
+  input image, cache read/write, reasoning) with pretty aliases
+  (`input`, `output`, `input_audio`, `output_audio`, `input_image`,
+  `cache_read`, `cache_write`, `reasoning`), a `Cost.from(ctx)` builder
+  that prices token usage from the registry, and a `to_h` that omits nil
+  components. `Usage` grows from 4 to 9 token fields. The OpenAI
+  (completions + responses), Anthropic, Google, and Ollama response
+  adapters now report audio/image/cache token usage.
+
+* **Add a new provider: LLM::Moonshot** <br>
+  [Moonshot AI](https://platform.moonshot.ai) through its
+  OpenAI-compatible Kimi API (`LLM.moonshot(key:)`, default model
+  `kimi-k3`), plus `data/moonshot.json` registry data.
+
+* **Sync the registry data and add `data/deepinfra.json`** <br>
+  All `data/*.json` files are synced with llm.rb's registry data, and the
+  missing `data/deepinfra.json` is added — fixing a latent
+  `LLM::NoSuchRegistryError` for `ctx.cost` on DeepInfra. The DeepInfra
+  and Mistral default models were updated to match llm.rb.
+
+### Change
+
+* **Shell out for glob matching in `LLM::Tool::Ls`** <br>
+  The hand-rolled glob engine is replaced by a `find` shell-out, and all
+  command-based tools (`Shell`, `Rg`, `Git`, `Mkdir`, `Ls`) now resolve
+  the `mruby-command` gem's `Command` class directly — previously they
+  referenced a `LLM::Tool::Command` constant that never existed and
+  raised `NameError` when invoked.
+
+* **Do not mutate caller params in constructors** <br>
+  `LLM::Context#initialize` and `LLM::Agent#initialize` copy `params`
+  before deleting keys, so the caller's hash is no longer modified.
+
+### Fix
+
+* **Fix `:task` waits from the root task** <br>
+  `LLM::Function::Task::Task#wait` no longer calls `Task#join` (which
+  raises from the root task); it polls the result queue non-blockingly.
+  A second wait on the same task returns the same result instead of the
+  worker's queue object.
+
+* **Fix large fork results being dropped** <br>
+  The fork child's non-blocking write now retries `Chan::WaitWritable`,
+  so tool results larger than the pipe buffer survive.
+
+* **Fix interrupts being traced as errors** <br>
+  `LLM::Function::Tracing#call` and `call_function` re-raise
+  `LLM::Interrupt` before the generic rescue, so interrupted tool calls
+  propagate instead of being reported as `tool.error` events.
+
+* **Fix `LLM::Object#fetch` KeyError messages** <br>
+  A missing key now reports the original key name instead of `nil`.
+
+* **Fix OpenAI-subclass host forwarding** <br>
+  DeepInfra and Mistral used a bare `super` in their initializers, which
+  mruby does not forward kwargs through — requests were sent to
+  `api.openai.com` instead of the provider's own host. Both now forward
+  `host:`/`base_path:` explicitly (`api.deepinfra.com`, `api.mistral.ai`).
 
 ## v0.1.0
 

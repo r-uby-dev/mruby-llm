@@ -19,9 +19,10 @@ module LLM
   # * The automatic tool loop enables the wrapped context's `guard` by default.
   #   The built-in {LLM::Guard::Loop LLM::Guard::Loop} detects repeated tool-call
   #   patterns and blocks stuck execution before more tool work is queued.
-  # * The default tool attempt budget is `25`. After that, the agent sends
-  #   advisory tool errors back through the model and keeps the loop in-band.
-  #   Set `tool_attempts: nil` to disable that advisory behavior.
+  # * The tool loop can be bounded with `tool_budget`. Once the budget is
+  #   spent, the agent sends an in-band advisory message back through the
+  #   model and keeps the loop in-band. By default no budget is set
+  #   (`nil`), so the feature is disabled.
   # * In the mruby runtime, agent tool loops execute through
   #   `concurrency :sequential` by default.
   #
@@ -121,6 +122,28 @@ module LLM
         @path
       else
         @path = path || block
+      end
+    end
+
+    ##
+    # Set or get the maximum number of tool calls
+    # that are allowed in a single turn. Once the
+    # budget is spent, we will return an in-band
+    # message that informs the model it has spent
+    # its tool call budget - and usually a model
+    # will change course afterwards.
+    # @note
+    #  By default this feature is disabled
+    #  (set to `nil`).
+    # @param [Integer] budget
+    #  The maximum number of tool calls to allow in
+    #  a single turn.
+    # @return [Integer, nil]
+    def self.tool_budget(budget = UNDEFINED, &block)
+      if budget.equal?(UNDEFINED)
+        @tool_budget
+      else
+        @tool_budget = budget || block
       end
     end
 
@@ -274,8 +297,8 @@ module LLM
     def initialize(llm, params = {})
       params = {}.merge!(params)
       @llm = llm
-      fields = %i[name description path model skills schema tracer stream tools concurrency instructions confirm]
-      fields_ivar = %i[name description path tracer concurrency instructions confirm]
+      fields = %i[name description path tool_budget model skills schema tracer stream tools concurrency instructions confirm]
+      fields_ivar = %i[name description path tool_budget tracer concurrency instructions confirm]
       fields.each do |field|
         resolvable = params.key?(field) ? params.delete(field) : self.class.public_send(field)
         resolve_symbol = !%i[concurrency].include?(field)
@@ -321,10 +344,11 @@ module LLM
     #
     # @param prompt (see LLM::Provider#complete)
     # @param [Hash] params The params passed to the provider, including optional :stream, :tools, :schema etc.
-    # @option params [Integer] :tool_attempts
-    #  The maxinum number of tool call iterations before the agent sends
-    #  in-band advisory tool errors back through the model (default 25).
-    #  Set to `nil` to disable advisory tool-limit returns.
+    # @option params [Integer] :tool_budget
+    #  The maximum number of tool calls that can be made in a single turn
+    #  before the agent sends an in-band advisory message that tells the model
+    #  it has spent its tool call budget - and usually the model will change
+    #  course after that. By default this feature is disabled (set to `nil`).
     # @return [LLM::Response] Returns the LLM's response for this turn.
     # @example
     #   llm = LLM.openai(key: ENV["KEY"])
@@ -473,6 +497,13 @@ module LLM
     end
 
     ##
+    # @see LLM::Context#compacted?
+    # @return [Boolean]
+    def compacted?
+      @ctx.compacted?
+    end
+
+    ##
     # @see LLM::Context#context_window
     # @return [Integer]
     def context_window
@@ -583,7 +614,7 @@ module LLM
     def run_loop(prompt, params, target = :talk)
       run = proc do
         talk = @ctx.method(target)
-        max = params.key?(:tool_attempts) ? params.delete(:tool_attempts) : 25
+        max = params.key?(:tool_budget) ? params.delete(:tool_budget) : @tool_budget
         max = Integer(max) if max
         stream = params[:stream] || @ctx.params[:stream]
         stream.extra[:concurrency] = concurrency if LLM::Stream === stream
@@ -594,7 +625,7 @@ module LLM
               break unless @ctx.pending_functions?
               res = talk.call(call_functions, params)
             end
-            res = talk.call(@ctx.pending_functions.map(&:rate_limit), params) if @ctx.pending_functions?
+            res = talk.call(@ctx.pending_functions.map(&:budget_spent), params) if @ctx.pending_functions?
           else
             res = talk.call(call_functions, params)
           end

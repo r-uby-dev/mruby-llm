@@ -38,6 +38,46 @@ module LLM::Contract
 
     ##
     # @return [Integer]
+    #  Returns the number of input audio tokens, or 0 when the
+    #  provider does not report input audio usage
+    def input_audio_tokens
+      0
+    end
+
+    ##
+    # @return [Integer]
+    #  Returns the number of output audio tokens, or 0 when the
+    #  provider does not report output audio usage
+    def output_audio_tokens
+      0
+    end
+
+    ##
+    # @return [Integer]
+    #  Returns the number of input image tokens, or 0 when the
+    #  provider does not report input image usage
+    def input_image_tokens
+      0
+    end
+
+    ##
+    # @return [Integer]
+    #  Returns the number of cached input tokens, or 0 when the
+    #  provider does not report cache usage
+    def cache_read_tokens
+      0
+    end
+
+    ##
+    # @return [Integer]
+    #  Returns the number of cache creation input tokens, or 0 when the
+    #  provider does not report cache creation usage
+    def cache_write_tokens
+      0
+    end
+
+    ##
+    # @return [Integer]
     #  Returns the total number of tokens
     def total_tokens
       raise NotImplementedError, "#{self.class} does not implement '#{__method__}'"
@@ -72,6 +112,11 @@ module LLM::Contract
         input_tokens:,
         output_tokens:,
         reasoning_tokens:,
+        input_audio_tokens:,
+        output_audio_tokens:,
+        input_image_tokens:,
+        cache_read_tokens:,
+        cache_write_tokens:,
         total_tokens:
       )
     end

@@ -55,6 +55,10 @@ module LLM
     LLM::DeepInfra.new(**)
   end
 
+  def self.moonshot(**)
+    LLM::Moonshot.new(**)
+  end
+
   def self.mistral(**)
     LLM::Mistral.new(**)
   end

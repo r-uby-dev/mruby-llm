@@ -188,6 +188,7 @@ MRuby::Gem::Specification.new('mruby-llm') do |spec|
     mrblib/mruby-llm/providers/deepinfra/response_adapter.rb
     mrblib/mruby-llm/providers/deepinfra/images.rb
     mrblib/mruby-llm/providers/deepinfra/audio.rb
+    mrblib/mruby-llm/providers/moonshot.rb
     mrblib/mruby-llm/providers/mistral/request_adapter.rb
     mrblib/mruby-llm/providers/mistral/request_adapter/completion.rb
     mrblib/mruby-llm/providers/mistral.rb

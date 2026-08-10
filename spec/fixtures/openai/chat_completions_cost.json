@@ -1,0 +1,25 @@
+{
+  "id": "chatcmpl_cost_fixture",
+  "model": "gpt-4.1",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "ok"
+      },
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 1000,
+    "completion_tokens": 2000,
+    "total_tokens": 3000,
+    "prompt_tokens_details": {
+      "cached_tokens": 500
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 400
+    }
+  }
+}

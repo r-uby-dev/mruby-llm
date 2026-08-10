@@ -2,43 +2,41 @@
 
 module LLM
   ##
-  # The XAI class implements a provider for [xAI](https://docs.x.ai).
+  # The Moonshot class implements a provider for
+  # [Moonshot AI](https://platform.moonshot.ai) through its
+  # OpenAI-compatible Kimi API.
   #
   # @example
   #   #!/usr/bin/env ruby
   #   require "llm"
   #
-  #   llm = LLM.xai(key: ENV["KEY"])
+  #   llm = LLM.moonshot(key: ENV["KEY"])
   #   ctx = LLM::Context.new(llm)
-  #   ctx.talk ["Tell me about this photo", ctx.local_file("/images/photo.png")]
-  #   ctx.messages.select(&:assistant?).each { print "[#{_1.role}]", _1.content, "\n" }
-  class XAI < OpenAI
+  #   ctx.talk "Hello"
+  class Moonshot < OpenAI
+    HOST = "api.moonshot.ai"
+    BASE_PATH = "/v1"
 
     ##
-    # @param [String] host A regional host or the default ("api.x.ai")
     # @param key (see LLM::Provider#initialize)
-    # @see https://docs.x.ai/docs/key-information/regions Regional endpoints
-    def initialize(host: "api.x.ai", **)
-      super(host:, **)
+    # @param host (see LLM::Provider#initialize)
+    # @param base_path (see LLM::Provider#initialize)
+    # @return [LLM::Moonshot]
+    def initialize(host: HOST, base_path: BASE_PATH, **)
+      super(host:, base_path:, **)
     end
 
     ##
     # @return [Symbol]
     #  Returns the provider's name
     def name
-      :xai
+      :moonshot
     end
 
     ##
     # @raise [NotImplementedError]
-    def files
-      raise NotImplementedError
-    end
-
-    ##
-    # @return [LLM::XAI::Images]
     def images
-      LLM::XAI::Images.new(self)
+      raise NotImplementedError
     end
 
     ##
@@ -67,10 +65,10 @@ module LLM
 
     ##
     # Returns the default model for chat completions
-    # #see https://docs.x.ai/docs/models grok-4.3
+    # @see https://platform.moonshot.ai/docs/api/models-overview Kimi models
     # @return [String]
     def default_model
-      "grok-4.3"
+      "kimi-k3"
     end
   end
 end

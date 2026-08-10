@@ -39,6 +39,11 @@ module LLM
       input_tokens: 0,
       output_tokens: 0,
       reasoning_tokens: 0,
+      input_audio_tokens: 0,
+      output_audio_tokens: 0,
+      input_image_tokens: 0,
+      cache_read_tokens: 0,
+      cache_write_tokens: 0,
       total_tokens: 0
     )
 
@@ -312,6 +317,11 @@ module LLM
           input_tokens: usage.input_tokens || 0,
           output_tokens: usage.output_tokens || 0,
           reasoning_tokens: usage.reasoning_tokens || 0,
+          input_audio_tokens: usage.input_audio_tokens || 0,
+          output_audio_tokens: usage.output_audio_tokens || 0,
+          input_image_tokens: usage.input_image_tokens || 0,
+          cache_read_tokens: usage.cache_read_tokens || 0,
+          cache_write_tokens: usage.cache_write_tokens || 0,
           total_tokens: usage.total_tokens || 0
         )
       else
@@ -435,12 +445,7 @@ module LLM
     #  Returns an _approximate_ cost for a given context
     #  based on both the provider, and model
     def cost
-      cost = LLM.registry_for(llm).cost(model:)
-      input_cost = (cost.input.to_f / 1_000_000.0) * usage.input_tokens
-      output_cost = (cost.output.to_f / 1_000_000.0) * usage.output_tokens
-      LLM::Cost.new(input_cost, output_cost)
-    rescue LLM::NoSuchModelError, LLM::NoSuchRegistryError
-      LLM::Cost.new(0, 0)
+      LLM::Cost.from(self)
     end
 
     ##

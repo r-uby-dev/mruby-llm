@@ -24,7 +24,7 @@ module LLM
     # @param base_path (see LLM::Provider#initialize)
     # @return [LLM::DeepInfra]
     def initialize(host: HOST, base_path: BASE_PATH, **)
-      super
+      super(host:, base_path:, **)
     end
 
     ##

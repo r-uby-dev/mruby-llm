@@ -22,7 +22,7 @@ module LLM
     # @param (see LLM::Provider#initialize)
     # @return [LLM::Mistral]
     def initialize(host: HOST, base_path: "/v1", **)
-      super
+      super(host:, base_path:, **)
     end
 
     ##

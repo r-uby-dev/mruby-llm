@@ -67,7 +67,7 @@ describe "LLM::Registry" do
         expect(cost).must_be_instance_of LLM::Object
         expect(cost.input).must_equal 0.15
         expect(cost.output).must_equal 0
-        expect(limit.output).must_equal 3072
+        expect(limit.context).must_equal 2048
       end
     end
   end
@@ -76,18 +76,18 @@ describe "LLM::Registry" do
     let(:provider) { :anthropic }
 
     context "#cost" do
-      it "returns an object for claude-opus-4-1" do
-        cost = registry.cost(model: "claude-opus-4-1")
+      it "returns an object for claude-opus-5" do
+        cost = registry.cost(model: "claude-opus-5")
         expect(cost).must_be_instance_of LLM::Object
-        expect(cost.input).must_equal 15
-        expect(cost.output).must_equal 75
-        expect(cost.cache_write).must_equal 18.75
+        expect(cost.input).must_equal 5
+        expect(cost.output).must_equal 25
+        expect(cost.cache_write).must_equal 6.25
       end
 
-      it "returns an object for claude-3-5-haiku-latest" do
-        limit = registry.limit(model: "claude-3-5-haiku-latest")
-        modalities = registry.modalities(model: "claude-3-5-haiku-latest")
-        expect(registry.cost(model: "claude-3-5-haiku-latest").input).must_equal 0.8
+      it "returns an object for claude-haiku-4-5-20251001" do
+        limit = registry.limit(model: "claude-haiku-4-5-20251001")
+        modalities = registry.modalities(model: "claude-haiku-4-5-20251001")
+        expect(registry.cost(model: "claude-haiku-4-5-20251001").input).must_equal 1
         expect(limit.context).must_equal 200000
         expect(modalities.input).must_equal ["text", "image", "pdf"]
       end
@@ -101,14 +101,14 @@ describe "LLM::Registry" do
       it "returns an object for deepseek-chat" do
         cost = registry.cost(model: "deepseek-chat")
         expect(cost).must_be_instance_of LLM::Object
-        expect(cost.input).must_equal 0.28
-        expect(cost.cache_read).must_equal 0.028
+        expect(cost.input).must_equal 0.14
+        expect(cost.cache_read).must_equal 0.0028
       end
 
       it "returns an object for deepseek-reasoner" do
         limit = registry.limit(model: "deepseek-reasoner")
-        expect(registry.cost(model: "deepseek-reasoner").output).must_equal 0.42
-        expect(limit.output).must_equal 64000
+        expect(registry.cost(model: "deepseek-reasoner").output).must_equal 0.28
+        expect(limit.output).must_equal 384000
       end
     end
   end
@@ -117,19 +117,19 @@ describe "LLM::Registry" do
     let(:provider) { :xai }
 
     context "#cost" do
-      it "returns an object for grok-2" do
-        cost = registry.cost(model: "grok-2")
+      it "returns an object for grok-4.3" do
+        cost = registry.cost(model: "grok-4.3")
         expect(cost).must_be_instance_of LLM::Object
-        expect(cost.input).must_equal 2
-        expect(cost.output).must_equal 10
+        expect(cost.input).must_equal 1.25
+        expect(cost.output).must_equal 2.5
       end
 
       it "returns an object for grok-4.20-0309-non-reasoning" do
         cost = registry.cost(model: "grok-4.20-0309-non-reasoning")
         limit = registry.limit(model: "grok-4.20-0309-non-reasoning")
         expect(cost).must_be_instance_of LLM::Object
-        expect(cost.context_over_200k.output).must_equal 12
-        expect(limit.context).must_equal 2000000
+        expect(cost.context_over_200k.output).must_equal 5
+        expect(limit.context).must_equal 1000000
       end
     end
   end
@@ -151,6 +151,32 @@ describe "LLM::Registry" do
         expect(cost).must_be_instance_of LLM::Object
         expect(cost.input).must_equal 0.2
         expect(cost.cache_read).must_equal 0.03
+      end
+    end
+  end
+
+  context "when given deepinfra" do
+    let(:provider) { :deepinfra }
+
+    context "#cost" do
+      it "returns an object for zai-org/GLM-5.2" do
+        cost = registry.cost(model: "zai-org/GLM-5.2")
+        expect(cost).must_be_instance_of LLM::Object
+        expect(cost.input).must_equal 0.75
+        expect(cost.output).must_equal 2.4
+      end
+    end
+  end
+
+  context "when given moonshot" do
+    let(:provider) { :moonshot }
+
+    context "#cost" do
+      it "returns an object for kimi-k3" do
+        cost = registry.cost(model: "kimi-k3")
+        expect(cost).must_be_instance_of LLM::Object
+        expect(cost.input).must_equal 3
+        expect(cost.output).must_equal 15
       end
     end
   end

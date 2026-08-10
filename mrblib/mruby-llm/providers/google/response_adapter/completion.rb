@@ -34,6 +34,36 @@ module LLM::Google::ResponseAdapter
     end
 
     ##
+    # (see LLM::Contract::Completion#input_audio_tokens)
+    def input_audio_tokens
+      super
+    end
+
+    ##
+    # (see LLM::Contract::Completion#output_audio_tokens)
+    def output_audio_tokens
+      super
+    end
+
+    ##
+    # (see LLM::Contract::Completion#input_image_tokens)
+    def input_image_tokens
+      super
+    end
+
+    ##
+    # (see LLM::Contract::Completion#cache_read_tokens)
+    def cache_read_tokens
+      0
+    end
+
+    ##
+    # (see LLM::Contract::Completion#cache_write_tokens)
+    def cache_write_tokens
+      0
+    end
+
+    ##
     # (see LLM::Contract::Completion#total_tokens)
     def total_tokens
       body.usageMetadata.totalTokenCount || 0

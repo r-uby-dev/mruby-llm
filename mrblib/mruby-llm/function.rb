@@ -255,13 +255,15 @@ class LLM::Function
   end
 
   ##
-  # Returns an in-band error for a tool loop rate limit.
+  # Returns an in-band error that indicates the tool
+  # call budget has been spent.
   # @return [LLM::Function::Return]
-  def rate_limit
+  def budget_spent
     LLM::Function::Return.new(id, name, {
       error: true,
-      type: LLM::ToolLoopError.name,
-      message: "tool loop rate limit reached"
+      type: "LLM::BudgetSpentError",
+      message: "the tool call budget for this turn has been spent. " \
+               "try to solve the problem with less tool calls."
     })
   end
 
