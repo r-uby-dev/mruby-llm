@@ -4,7 +4,7 @@ class LLM::Stream
   ##
   # A small queue for collecting streamed tool work. Values can be immediate
   # {LLM::Function::Return} objects or task-like objects returned by
-  # {LLM::Function#spawn}. Calling {#wait} resolves queued work and returns
+  # {LLM::Function#task}. Calling {#wait} resolves queued work and returns
   # an array of {LLM::Function::Return} values.
   class Queue
     ##

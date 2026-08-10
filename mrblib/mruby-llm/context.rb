@@ -261,7 +261,7 @@ module LLM
     def spawn(function, strategy)
       warning = guard&.call(self)
       return guarded_return_for(function, warning) if warning
-      function.spawn(strategy)
+      function.task(strategy)
     end
 
     ##
@@ -299,7 +299,7 @@ module LLM
         tools  = except.empty? ? functions : functions - except
         guards = guarded_returns(tools:)
         return guards if guards
-        @queue = tools.spawn(strategy)
+        @queue = tools.task(strategy)
         returns = @queue.wait
         emit_tool_returns(tools, returns)
         returns

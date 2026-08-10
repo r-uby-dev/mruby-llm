@@ -17,28 +17,51 @@ class LLM::Function
     end
 
     ##
-    # Calls all functions in a collection through the mruby runtime surface.
+    # Calls all functions in a collection concurrently.
+    # This method returns an execution group that can be
+    # waited on to access the return values.
     #
     # @param [Symbol] strategy
-    # @return [LLM::Function::CallGroup, LLM::Function::TaskGroup]
-    def spawn(strategy = :call)
+    #   Controls concurrency strategy:
+    #   - `:sequential`: Call functions sequentially without spawning
+    #   - `:task`: Run functions cooperatively through the mruby-task scheduler
+    #   - `:fork`: Use forked child processes
+    # @return [LLM::Function::Sequential::Group, LLM::Function::Task::Group, LLM::Function::Fork::Group]
+    def task(strategy)
       case strategy
-      when :call
-        CallGroup.new(self)
+      when :sequential
+        Sequential::Group.new(map { _1.task(:sequential) })
       when :task
-        TaskGroup.new(map { |fn| LLM::Function::Task.new(::Task.new { fn.call }, fn) })
+        Task::Group.new(map { |fn| fn.task(:task) })
       when :fork
-        TaskGroup.new(map { |fn| LLM::Function::ForkTask.new(fn) })
+        Fork::Group.new(map { |fn| fn.task(:fork) })
       else
-        raise ArgumentError, "Unknown strategy: #{strategy.inspect}. Expected :call, :task, or :fork"
+        raise ArgumentError, "Unknown strategy: #{strategy.inspect}. Expected :sequential, :task, or :fork"
       end
     end
 
     ##
+    # Spawns a function collection through the legacy surface.
+    # @deprecated Use {#task} instead.
     # @param [Symbol] strategy
+    # @return [LLM::Function::Group]
+    def spawn(strategy = :sequential)
+      task(strategy)
+    end
+
+    ##
+    # Calls all functions in a collection concurrently and waits for the
+    # return values.
+    #
+    # @param [Symbol] strategy
+    #   Controls concurrency strategy:
+    #   - `:sequential`: Call functions sequentially without spawning
+    #   - `:task`: Run functions cooperatively through the mruby-task scheduler
+    #   - `:fork`: Use forked child processes
     # @return [Array<LLM::Function::Return>]
-    def wait(strategy = :call)
-      spawn(strategy)
+    #  Returns values to be reported back to the LLM.
+    def wait(strategy)
+      task(strategy).wait
     end
 
     ##

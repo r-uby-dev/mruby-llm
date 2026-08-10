@@ -2,69 +2,62 @@
 
 class LLM::Function
   ##
-  # The {LLM::Function::Task} class wraps a single mruby-task-backed
-  # function call.
+  # This class is the superclass that all concurrency strategies must
+  # subclass in order to implement their own Task class. It provides a
+  # common interface that is the same across all concurrency strategies.
   class Task
     ##
-    # @return [Object]
-    attr_reader :task
-
-    ##
-    # @return [LLM::Function, nil]
+    # @return [LLM::Function]
     attr_reader :function
 
     ##
-    # @param [Task] task
-    # @param [LLM::Function, nil] function
-    # @return [LLM::Function::Task]
-    def initialize(task, function = nil)
-      @task = task
-      @function = function
+    # @param [LLM::Function] fn
+    # @param [Hash] options
+    #  An optional set of options that are specific to a given concurrency
+    #  strategy.
+    # @option options [LLM::Function::Return, nil] :guarded
+    #  A blocked return produced by the function's guard. When set, the task
+    #  yields it without running the tool.
+    def initialize(fn, options = {})
+      @function = fn
+      @guarded = options[:guarded]
     end
 
     ##
+    # @abstract
+    # @return [nil]
+    def spawn
+      raise NotImplementedError
+    end
+
+    ##
+    # @abstract
     # @return [Boolean]
     def alive?
-      return task.alive? if task.respond_to?(:alive?)
-      return task.status != :DORMANT if task?(task)
-      false
+      raise NotImplementedError
     end
 
     ##
+    # @abstract
     # @return [nil]
     def interrupt!
-      if task.respond_to?(:interrupt!)
-        task.interrupt!
-      elsif ::Task === task
-        task.terminate
-      end
-      function&.interrupt!
-      nil
+      raise NotImplementedError
     end
     alias_method :cancel!, :interrupt!
 
     ##
+    # @abstract
     # @return [LLM::Function::Return]
     def wait
-      if task?(task)
-        task.join
-        normalize(task.value)
-      else
-        task.wait
-      end
+      raise NotImplementedError
     end
     alias_method :value, :wait
 
-    private
-
-    def normalize(value)
-      return value unless Exception === value
-      return value if LLM::Function::Return === value
-      function ? function.error(value) : value
-    end
-
-    def task?(task)
-      ::Task === task
+    ##
+    # @abstract
+    # @return [Class]
+    def group_class
+      raise NotImplementedError
     end
   end
 end

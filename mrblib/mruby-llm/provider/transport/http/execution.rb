@@ -20,9 +20,9 @@ class LLM::Transport
       span = tracer.on_request_start(operation:, model:, inputs:)
       res = transport.request(request, owner:, stream:, &b)
       [handle_response(res, tracer, span), span, tracer]
-    rescue *transport.interrupt_errors
+    rescue *transport.interrupt_errors => e
       raise LLM::Interrupt, "request interrupted" if transport.interrupted?(owner)
-      raise
+      raise e
     end
 
     ##

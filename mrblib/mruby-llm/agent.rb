@@ -22,8 +22,8 @@ module LLM
   # * The default tool attempt budget is `25`. After that, the agent sends
   #   advisory tool errors back through the model and keeps the loop in-band.
   #   Set `tool_attempts: nil` to disable that advisory behavior.
-  # * In the mruby runtime, agent tool loops currently execute through
-  #   `concurrency :call`.
+  # * In the mruby runtime, agent tool loops execute through
+  #   `concurrency :sequential` by default.
   #
   # @example
   #   class SystemAdmin < LLM::Agent
@@ -108,8 +108,8 @@ module LLM
     ##
     # Set or get the tool execution concurrency.
     #
-    # In the mruby runtime, the supported agent execution modes are `:call`
-    # and `:task`.
+    # In the mruby runtime, the supported agent execution modes are
+    # `:sequential`, `:task`, and `:fork`.
     #
     # @param [Symbol, nil] concurrency
     # @return [Symbol, nil]
@@ -421,7 +421,7 @@ module LLM
     # @param [Symbol, Array<Symbol>] strategy
     #  The execution strategy that would be used for the tool call.
     # @return [LLM::Function::Return]
-    #  Return either `fn.spawn(strategy).wait` to approve execution or
+    #  Return either `fn.task(strategy).wait` to approve execution or
     #  `fn.cancel(...)` to cancel the call.
     def on_tool_confirmation(fn, strategy)
       fn.cancel
@@ -459,7 +459,7 @@ module LLM
     ##
     # @return [Array<LLM::Function::Return>]
     def call_functions
-      strategy = concurrency || :call
+      strategy = concurrency || :sequential
       return wait(strategy) unless @confirm&.any?
       confirmables = @ctx.functions.select { @confirm.include?(_1.name.to_s) }
       results = confirmables.map { method(:on_tool_confirmation).call(_1, strategy) }

@@ -127,8 +127,8 @@ describe "LLM::Context" do
       expect(ctx.functions).must_be_empty
     end
 
-    it "waits for functions through :call" do
-      ctx.talk ctx.wait(:call)
+    it "waits for functions through :sequential" do
+      ctx.talk ctx.wait(:sequential)
       expect(ctx.functions).must_be_empty
     end
 
@@ -199,7 +199,7 @@ describe "LLM::Context" do
     end
 
     it "emits tool returns from direct waits" do
-      ctx.wait(:call)
+      ctx.wait(:sequential)
       expect(stream.returns).must_equal [["system", "system", {"success" => "2025-08-24"}]]
     end
   end

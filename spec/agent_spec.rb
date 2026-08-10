@@ -236,13 +236,13 @@ describe "LLM::Agent" do
     context "when configured with class-level concurrency" do
       let(:agent_class) do
         Class.new(LLM::Agent) do
-          concurrency :call
+          concurrency :sequential
         end
       end
       let(:agent) { agent_class.new(llm) }
 
       it "keeps concurrency on the agent" do
-        expect(agent.concurrency).must_equal :call
+        expect(agent.concurrency).must_equal :sequential
       end
     end
   end
@@ -374,7 +374,7 @@ describe "LLM::Agent" do
         Class.new(LLM::Agent) do
           confirm "system"
           def on_tool_confirmation(fn, strategy)
-            fn.spawn(strategy).wait
+            fn.task(strategy).wait
           end
         end
       end

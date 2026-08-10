@@ -145,17 +145,17 @@ describe "LLM::Stream" do
       end
 
       before do
-        stream.queue << tool.spawn(:call)
+        stream.queue << tool.task(:sequential)
       end
 
       it "waits for the spawned work" do
-        expect(stream.wait(:call).map(&:to_h)).must_equal([
+        expect(stream.wait(:sequential).map(&:to_h)).must_equal([
           {id: "call_1", name: "system", value: {ok: true}}
         ])
       end
 
       it "emits on_tool_return" do
-        returns = stream.wait(:call)
+        returns = stream.wait(:sequential)
         expect(stream.events).must_equal [[tool, returns.fetch(0)]]
       end
     end

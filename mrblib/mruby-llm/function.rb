@@ -180,29 +180,43 @@ class LLM::Function
   end
 
   ##
-  # Calls the function through the mruby runtime surface.
+  # Returns the function as a {LLM::Function::Task LLM::Function::Task}.
   #
-  # This is the low-level method that powers tool execution. In the mruby
-  # runtime, functions can be called directly or run through mruby-task.
-  # Prefer the collection methods on {LLM::Context#functions} for most use
-  # cases, such as {LLM::Function::Array#call}, {LLM::Function::Array#wait},
-  # or {LLM::Function::Array#spawn}.
+  # @example
+  #   # As a group
+  #   ctx.talk(ctx.functions.wait(:sequential))
+  #
+  #   # As a task
+  #   task = tool.task(:task)
+  #   result = task.value
   #
   # @param [Symbol] strategy
-  #  The execution strategy. mruby currently supports `:call`, `:task`, and `:fork`.
-  # @return [LLM::Function::Return, LLM::Function::Task, LLM::Function::ForkTask]
-  def spawn(strategy = :call)
-    @task = case strategy
-    when :call
-      CallTask.new(self)
+  #   Controls concurrency strategy:
+  #   - `:sequential`: Call the function sequentially without spawning
+  #   - `:task`: Run the function cooperatively through the mruby-task scheduler
+  #   - `:fork`: Run the function in a forked child process
+  # @return [LLM::Function::Task]
+  #   Returns a task whose `#value` is an {LLM::Function::Return}.
+  def task(strategy, options = {})
+    case strategy
+    when :sequential
+      Sequential::Task.new(self, options)
     when :task
-      fn = self
-      LLM::Function::Task.new(::Task.new { fn.call }, fn)
+      Task::Task.new(self, options)
     when :fork
-      ForkTask.new(self)
+      Fork::Task.new(self, options.merge(tracer: @tracer))
     else
-      raise ArgumentError, "Unknown strategy: #{strategy.inspect}. Expected :call, :task, or :fork"
+      raise ArgumentError, "Unknown strategy: #{strategy.inspect}. Expected :sequential, :task, or :fork"
     end
+  end
+
+  ##
+  # Spawns a function through the legacy surface.
+  # @deprecated Use {#task} instead.
+  # @param [Symbol] strategy
+  # @return [LLM::Function::Task]
+  def spawn(strategy = :sequential)
+    task(strategy)
   end
 
   ##
@@ -255,14 +269,9 @@ class LLM::Function
   # `on_interrupt`.
   # @return [nil]
   def interrupt!
-    return nil if @interrupting
-    @interrupting = true
-    @task&.interrupt!
     hook = %i[on_cancel on_interrupt].find { @runner.respond_to?(_1) }
     @runner.public_send(hook) if hook
     nil
-  ensure
-    @interrupting = false
   end
   alias_method :cancel!, :interrupt!
 
@@ -378,6 +387,8 @@ class LLM::Function
     # **kwargs => given 0 arguments, expected 0
     value = Hash === kwargs && kwargs.empty? ? runner.call : runner.call(**kwargs)
     Return.new(id, name, value)
+  rescue LLM::Interrupt => e
+    raise e
   rescue => ex
     error(ex)
   end

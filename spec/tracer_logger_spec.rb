@@ -60,6 +60,31 @@ describe "LLM::Tracer::Logger" do
       expect(events.last["event"]).must_equal "tool.finish"
     end
   end
+
+  describe "interrupted traced calls" do
+    let(:function) do
+      LLM.function(:system) do |fn|
+        fn.name "system"
+        fn.define do
+          raise LLM::Interrupt
+        end
+      end
+    end
+
+    before do
+      function.id = "call_1"
+      function.tracer = tracer
+    end
+
+    it "re-raises LLM::Interrupt" do
+      expect(proc { function.call }).must_raise LLM::Interrupt
+    end
+
+    it "does not write a tool error event for interrupts" do
+      function.call rescue nil
+      expect(events.none? { _1["event"] == "tool.error" }).must_equal true
+    end
+  end
 end
 
 Minitest.run(ARGV) || exit(1)

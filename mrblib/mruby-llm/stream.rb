@@ -109,7 +109,7 @@ module LLM
     # Called when a streamed tool call has been fully constructed.
     # @note A stream implementation may start tool execution here and push
     #   the resulting work onto {#queue}. In the mruby runtime this currently
-    #   means executing through `:call`.
+    #   means executing through `:sequential`.
     # @note When a streamed tool cannot be resolved, `error` is passed as an
     #   {LLM::Function::Return}. It can be sent back to the model, allowing
     #   the tool-call path to recover and the session to continue. Streamed
