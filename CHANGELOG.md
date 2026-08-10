@@ -171,12 +171,15 @@ and fixes that bring mruby-llm up to parity with llm.rb v14.0.0.
 * **Add a new provider: LLM::Alibaba** <br>
   [Alibaba Cloud Model Studio](https://www.alibabacloud.com/help/en/model-studio/models)
   through its OpenAI-compatible API (`LLM.alibaba(key:)`, aliased as
-  `LLM.aliyun`), served via the Token Plan endpoint
-  (`token-plan.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1`) with
-  default model `deepseek-v4-flash-0731`, plus `data/alibaba.json` registry
-  data. Alibaba does not support `json_schema`, so schema handling falls
-  back to `json_object` with an injected system message — the shared
-  `LLM::OpenAI::Schema` module, which is also factored out of DeepSeek.
+  `LLM.aliyun`). The default host is the pay-as-you-go endpoint
+  (`dashscope-intl.aliyuncs.com/compatible-mode/v1`) — override it
+  globally with the `ALIBABA_API_HOST` environment variable or per
+  instance with `LLM.alibaba(host: ...)`, for example to point at a
+  Token Plan endpoint — with default model `deepseek-v4-flash-0731`,
+  plus `data/alibaba.json` registry data. Alibaba does not support
+  `json_schema`, so schema handling falls back to `json_object` with an
+  injected system message — the shared `LLM::OpenAI::Schema` module,
+  which is also factored out of DeepSeek.
 
 * **Add `retry_budget` support** <br>
   `LLM::Context` accepts `retry_budget:` (default 0) and retries

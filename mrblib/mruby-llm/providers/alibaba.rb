@@ -7,6 +7,13 @@ module LLM
   # through its OpenAI-compatible API, including the Qwen3
   # family of models.
   #
+  # The default host is the pay-as-you-go DashScope
+  # international endpoint (`dashscope-intl.aliyuncs.com`). Configure
+  # a different host either globally through the `ALIBABA_API_HOST`
+  # environment variable, or per instance through
+  # `LLM.alibaba(host: "token-plan.ap-southeast-1.maas.aliyuncs.com")`
+  # (for example Alibaba's Token Plan).
+  #
   # @example
   #   #!/usr/bin/env ruby
   #   require "llm"
@@ -15,7 +22,7 @@ module LLM
   #   ctx = LLM::Context.new(llm)
   #   ctx.talk "Hello"
   class Alibaba < OpenAI
-    HOST = "token-plan.ap-southeast-1.maas.aliyuncs.com"
+    HOST = "dashscope-intl.aliyuncs.com"
     BASE_PATH = "/compatible-mode/v1"
 
     ##
@@ -23,7 +30,7 @@ module LLM
     # @param host (see LLM::Provider#initialize)
     # @param base_path (see LLM::Provider#initialize)
     # @return [LLM::Alibaba]
-    def initialize(host: HOST, base_path: BASE_PATH, **)
+    def initialize(host: ENV.fetch("ALIBABA_API_HOST", HOST), base_path: BASE_PATH, **)
       super(host:, base_path:, **)
     end
 

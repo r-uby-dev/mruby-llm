@@ -9,7 +9,7 @@ describe "LLM::Alibaba" do
     expect(LLM::OpenAI === llm).must_equal true
     expect(llm.name).must_equal :alibaba
     expect(llm.default_model).must_equal "deepseek-v4-flash-0731"
-    expect(llm.instance_variable_get(:@host)).must_equal "token-plan.ap-southeast-1.maas.aliyuncs.com"
+    expect(llm.instance_variable_get(:@host)).must_equal "dashscope-intl.aliyuncs.com"
     expect(llm.instance_variable_get(:@base_path)).must_equal "/compatible-mode/v1"
   end
 
