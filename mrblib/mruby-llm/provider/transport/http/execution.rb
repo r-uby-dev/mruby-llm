@@ -14,6 +14,7 @@ class LLM::Transport
     # @param [Proc] b
     # @return [LLM::Transport::Response]
     def execute(request:, operation:, stream: nil, stream_parser: self.stream_parser, model: nil, inputs: nil, &b)
+      stream = nil if stream && !stream.enabled?
       stream &&= LLM::Object.from(streamer: stream, parser: stream_parser, decoder: stream_decoder)
       owner = transport.request_owner
       tracer = self.tracer

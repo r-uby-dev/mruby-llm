@@ -37,6 +37,28 @@ describe "LLM::OpenAI provider integration" do
     end
   end
 
+  context "when completing with a disabled stream" do
+    let(:res) { llm.complete("Hello", stream: false) }
+    let(:request) do
+      res
+      transport.requests[0]
+    end
+    let(:payload) { LLM.json.load(request[:body]) }
+
+    before do
+      transport.stub("POST", "/v1/chat/completions", fixture: "openai/chat_completions.json")
+    end
+
+    it "does not mark the request as streaming" do
+      expect(payload["stream"]).must_equal false
+      expect(payload.key?("stream_options")).must_equal false
+    end
+
+    it "adapts the non-streaming response" do
+      expect(res.content).must_equal "Hello from fixture"
+    end
+  end
+
   context "when completing with streaming" do
     let(:stream_class) do
       Class.new(LLM::Stream) do

@@ -168,6 +168,33 @@ and fixes that bring mruby-llm up to parity with llm.rb v14.0.0.
   `LLM::NoSuchRegistryError` for `ctx.cost` on DeepInfra. The DeepInfra
   and Mistral default models were updated to match llm.rb.
 
+* **Add a new provider: LLM::Alibaba** <br>
+  [Alibaba Cloud Model Studio](https://www.alibabacloud.com/help/en/model-studio/models)
+  through its OpenAI-compatible API (`LLM.alibaba(key:)`, aliased as
+  `LLM.aliyun`), served via the Token Plan endpoint
+  (`token-plan.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1`) with
+  default model `deepseek-v4-flash-0731`, plus `data/alibaba.json` registry
+  data. Alibaba does not support `json_schema`, so schema handling falls
+  back to `json_object` with an injected system message — the shared
+  `LLM::OpenAI::Schema` module, which is also factored out of DeepSeek.
+
+* **Add `retry_budget` support** <br>
+  `LLM::Context` accepts `retry_budget:` (default 0) and retries
+  `LLM::RateLimitError` with a growing sleep (2s, 4s, ...), notifying
+  `Stream#on_rate_limit` before each retry. `LLM::Agent.retry_budget` is a
+  class DSL that enables a budget of 3 by default.
+
+* **Add `LLM::Usage.zero`** <br>
+  `LLM::Context#usage` and `LLM::Agent#usage` now return `LLM::Usage`
+  objects instead of `LLM::Object` when no provider usage has been
+  recorded.
+
+* **Sync the DeepInfra registry data** <br>
+  `data/deepinfra.json` is refreshed with llm.rb's latest pricing for
+  `MiniMaxAI/MiniMax-M3`, `deepseek-ai/DeepSeek-V4-Flash-0731`,
+  `moonshotai/Kimi-K2.7-Code`, `moonshotai/Kimi-K3`, and
+  `thinkingmachines/Inkling-Small`.
+
 ### Change
 
 * **Shell out for glob matching in `LLM::Tool::Ls`** <br>
@@ -206,6 +233,13 @@ and fixes that bring mruby-llm up to parity with llm.rb v14.0.0.
   mruby does not forward kwargs through — requests were sent to
   `api.openai.com` instead of the provider's own host. Both now forward
   `host:`/`base_path:` explicitly (`api.deepinfra.com`, `api.mistral.ai`).
+
+* **Fix OpenAI streamed-usage reporting** <br>
+  `normalize_complete_params` now resolves the stream through
+  `LLM::Stream.try` and checks `enabled?`, so `stream_options:
+  {include_usage: true}` is only sent for genuinely streaming requests.
+  A disabled stream (`false` / `LLM::Stream::Disabled`) is no longer marked
+  as streaming, and the transport layer treats it exactly like `false`.
 
 ## v0.1.0
 

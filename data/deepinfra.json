@@ -228,6 +228,7 @@
       "reasoning": true,
       "reasoning_options": [],
       "tool_call": true,
+      "structured_output": true,
       "temperature": true,
       "release_date": "2026-07-30",
       "last_updated": "2026-07-30",
@@ -1157,9 +1158,9 @@
         "output": 128000
       },
       "cost": {
-        "input": 0.3,
-        "output": 1.2,
-        "cache_read": 0.06
+        "input": 0.28,
+        "output": 1.1,
+        "cache_read": 0.056
       }
     },
     "deepseek-ai/DeepSeek-V3": {
@@ -1224,9 +1225,9 @@
         "output": 384000
       },
       "cost": {
-        "input": 0.09,
+        "input": 0.08,
         "output": 0.18,
-        "cache_read": 0.018
+        "cache_read": 0.016
       }
     },
     "deepseek-ai/DeepSeek-R1-0528": {
@@ -1591,9 +1592,9 @@
         "output": 262144
       },
       "cost": {
-        "input": 0.74,
-        "output": 3.5,
-        "cache_read": 0.15
+        "input": 0.68,
+        "output": 3.4,
+        "cache_read": 0.136
       }
     },
     "moonshotai/Kimi-K3": {
@@ -1633,9 +1634,9 @@
         "output": 131072
       },
       "cost": {
-        "input": 2.7,
-        "output": 13.5,
-        "cache_read": 0.27
+        "input": 2.85,
+        "output": 14.25,
+        "cache_read": 0.285
       }
     },
     "openai/gpt-oss-20b": {

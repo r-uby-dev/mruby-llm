@@ -26,16 +26,16 @@ module LLM
     # subclass of it.
     #
     # Acceptable inputs include: {LLM::Stream LLM::Stream}
-    # objects, IO objects who implement `#<<`, true, false,
+    # objects, IO objects who implement `#<<` or `#write`, true, false,
     # and nil. Anything else raises a TypeError.
     #
     # @raise [TypeError]
-    # @param [LLM::Stream, #<<, Boolean, NilClass] obj
+    # @param [LLM::Stream, #<<, #write, Boolean, NilClass] obj
     # @return [LLM::Stream]
     def self.try(obj, extra: {})
       if LLM::Stream === obj
         obj.tap { _1.extra.merge!(extra) }
-      elsif obj.respond_to?(:<<)
+      elsif obj.respond_to?(:<<) || obj.respond_to?(:write)
         LLM::Stream::IO.new(obj).tap { _1.extra.merge!(extra) }
       elsif obj == true
         LLM::Stream.new.tap { _1.extra.merge!(extra) }
@@ -168,6 +168,14 @@ module LLM
     # @param [LLM::Compactor] compactor
     # @return [nil]
     def on_compaction_finish(compactor)
+      nil
+    end
+
+    ##
+    # Called when a request is rate limited and will be retried.
+    # @param [LLM::RateLimitError] error
+    # @return [nil]
+    def on_rate_limit(error)
       nil
     end
 

@@ -245,6 +245,103 @@ describe "LLM::Context" do
       expect(restored.messages.last.content).must_equal "You just said hello, and I answered Hello from fixture."
     end
   end
+
+  context "when a request is rate limited" do
+    ##
+    # The mruby specs have no general method-stub helper, so sleep is
+    # neutralized on the context to keep the suite fast.
+    class LLM::Context
+      def sleep(*)
+        nil
+      end
+    end
+
+    describe "retry budget" do
+      it "defaults to 0" do
+        expect(LLM::Context.new(provider).retry_budget).must_equal 0
+      end
+
+      it "returns the configured budget" do
+        expect(LLM::Context.new(provider, retry_budget: 5).retry_budget).must_equal 5
+      end
+    end
+
+    context "when a request is rate limited then succeeds" do
+      let(:stream) do
+        Class.new(LLM::Stream) do
+          attr_reader :limits
+          def initialize
+            @limits = []
+          end
+          def on_rate_limit(error)
+            @limits << error
+          end
+        end.new
+      end
+      let(:params) { {model: "gpt-4.1", retry_budget: 3, stream:} }
+      let(:ctx) { LLM::Context.new(provider, params) }
+
+      before do
+        transport
+          .stub("POST", "/v1/chat/completions", fixture: "openai/rate_limited.json", code: 429)
+          .stub(
+            "POST", "/v1/chat/completions",
+            fixture: "openai/chat_completions.sse",
+            headers: {"content-type" => "text/event-stream"}
+          )
+        ctx.talk("ping")
+      end
+
+      it "retries and succeeds" do
+        expect(ctx.messages.find(&:assistant?).content).must_equal "Hello there"
+      end
+
+      it "notifies the stream once per rate limit" do
+        expect(stream.limits.size).must_equal 1
+      end
+
+      it "notifies the stream with rate limit errors" do
+        expect(stream.limits[0]).must_be_instance_of LLM::RateLimitError
+      end
+    end
+
+    context "when the budget is exhausted" do
+      let(:ctx) { LLM::Context.new(provider, model: "gpt-4.1", retry_budget: 2) }
+
+      before do
+        3.times do
+          transport.stub("POST", "/v1/chat/completions", fixture: "openai/rate_limited.json", code: 429)
+        end
+      end
+
+      it "re-raises the rate limit error" do
+        expect { ctx.talk("ping") }.must_raise LLM::RateLimitError
+      end
+    end
+  end
+
+  context "#usage" do
+    it "returns LLM::Usage.zero before any turn" do
+      usage = ctx.usage
+      expect(usage).must_be_instance_of LLM::Usage
+      expect(usage.input_tokens).must_equal 0
+      expect(usage.output_tokens).must_equal 0
+      expect(usage.reasoning_tokens).must_equal 0
+      expect(usage.total_tokens).must_equal 0
+    end
+
+    it "zero-fills missing token fields from the last assistant message" do
+      ctx.messages << LLM::Message.new("assistant", "hello", usage: LLM::Object.from(input_tokens: 3))
+      usage = ctx.usage
+      expect(usage).must_be_instance_of LLM::Usage
+      expect(usage.input_tokens).must_equal 3
+      expect(usage.output_tokens).must_equal 0
+      expect(usage.reasoning_tokens).must_equal 0
+      expect(usage.cache_read_tokens).must_equal 0
+      expect(usage.cache_write_tokens).must_equal 0
+      expect(usage.total_tokens).must_equal 0
+    end
+  end
 end
 
 Minitest.run(ARGV) || exit(1)

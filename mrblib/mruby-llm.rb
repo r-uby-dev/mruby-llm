@@ -59,6 +59,14 @@ module LLM
     LLM::Moonshot.new(**)
   end
 
+  def self.alibaba(**)
+    LLM::Alibaba.new(**)
+  end
+
+  def self.aliyun(**)
+    LLM::Alibaba.new(**)
+  end
+
   def self.mistral(**)
     LLM::Mistral.new(**)
   end

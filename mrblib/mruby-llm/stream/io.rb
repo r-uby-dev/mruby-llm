@@ -3,12 +3,13 @@
 class LLM::Stream
   ##
   # An {LLM::Stream::IO LLM::Stream::IO} wraps an object that responds to
-  # `#<<` and forwards streamed content to it.
+  # `#<<` or `#write` and forwards streamed content to it.
   #
   # This enables any object that implements `#<<` - such as an IO, StringIO,
   # or a custom logger - to be used as a stream target. {LLM::Stream.try}
   # creates instances of this class automatically when given an IO-like
-  # object.
+  # object. On mruby, `StringIO` only implements `#write`, so content is
+  # forwarded through `#write` when `#<<` is unavailable.
   #
   # @example Using an IO object as a stream
   #   File.open("output.txt", "w") do |file|
@@ -16,8 +17,8 @@ class LLM::Stream
   #   end
   class IO < self
     ##
-    # @param [#<<] io
-    #  Any object that implements `#<<`.
+    # @param [#<<, #write] io
+    #  Any object that implements `#<<` or `#write`.
     def initialize(io)
       @io = io
     end
@@ -27,7 +28,11 @@ class LLM::Stream
     # @param [String] content
     # @return [void]
     def on_content(content)
-      @io << content
+      if @io.respond_to?(:<<)
+        @io << content
+      else
+        @io.write(content)
+      end
     end
 
     ##

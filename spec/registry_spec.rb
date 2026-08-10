@@ -180,6 +180,33 @@ describe "LLM::Registry" do
       end
     end
   end
+
+  context "when given alibaba" do
+    let(:provider) { :alibaba }
+
+    context "#cost" do
+      it "returns an object for qwen3.6-flash" do
+        cost = registry.cost(model: "qwen3.6-flash")
+        expect(cost).must_be_instance_of LLM::Object
+        expect(cost.input).must_equal 0.1875
+        expect(cost.output).must_equal 1.125
+      end
+
+      it "returns an object for qwen3-max" do
+        cost = registry.cost(model: "qwen3-max")
+        expect(cost).must_be_instance_of LLM::Object
+        expect(cost.input).must_equal 1.2
+        expect(cost.output).must_equal 6
+      end
+
+      it "returns an object for the default deepseek-v4-flash-0731 model" do
+        cost = registry.cost(model: "deepseek-v4-flash-0731")
+        expect(cost).must_be_instance_of LLM::Object
+        expect(cost.input).must_equal 0.2
+        expect(cost.output).must_equal 0.4
+      end
+    end
+  end
 end
 
 Minitest.run(ARGV) || exit(1)

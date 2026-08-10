@@ -245,6 +245,27 @@ describe "LLM::Agent" do
         expect(agent.concurrency).must_equal :sequential
       end
     end
+
+    context "when configured with a retry budget" do
+      let(:agent_class) do
+        Class.new(LLM::Agent) do
+          retry_budget 5
+        end
+      end
+      let(:agent) { agent_class.new(llm) }
+
+      it "passes the retry budget to the context" do
+        expect(agent.instance_variable_get(:@ctx).retry_budget).must_equal 5
+      end
+    end
+
+    context "without a configured retry budget" do
+      let(:agent) { LLM::Agent.new(llm) }
+
+      it "enables retries by default on an agent" do
+        expect(agent.instance_variable_get(:@ctx).retry_budget).must_equal 3
+      end
+    end
   end
 
   describe "#talk" do

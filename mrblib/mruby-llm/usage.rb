@@ -13,6 +13,18 @@ class LLM::Usage < Struct.new(
   :cache_read_tokens, :cache_write_tokens, :total_tokens, keyword_init: true
 )
   ##
+  # @return [LLM::Usage]
+  def self.zero
+    LLM::Usage.new(
+      input_tokens: 0, output_tokens: 0,
+      reasoning_tokens: 0, input_audio_tokens: 0,
+      output_audio_tokens: 0, input_image_tokens: 0,
+      cache_read_tokens: 0, cache_write_tokens: 0,
+      total_tokens: 0
+    )
+  end
+
+  ##
   # @return [String]
   def to_json(...)
     LLM.json.dump({

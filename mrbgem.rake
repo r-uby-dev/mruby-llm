@@ -95,6 +95,8 @@ MRuby::Gem::Specification.new('mruby-llm') do |spec|
     mrblib/mruby-llm/function/array.rb
     mrblib/mruby-llm/function.rb
     mrblib/mruby-llm/stream/queue.rb
+    mrblib/mruby-llm/stream/io.rb
+    mrblib/mruby-llm/stream/disabled.rb
     mrblib/mruby-llm/stream.rb
     mrblib/mruby-llm/eventstream/event.rb
     mrblib/mruby-llm/eventstream/parser.rb
@@ -179,6 +181,7 @@ MRuby::Gem::Specification.new('mruby-llm') do |spec|
     mrblib/mruby-llm/providers/openai/response_adapter/web_search.rb
     mrblib/mruby-llm/providers/openai/stream_parser.rb
     mrblib/mruby-llm/providers/openai/vector_stores.rb
+    mrblib/mruby-llm/providers/openai/schema.rb
     mrblib/mruby-llm/providers/deepseek.rb
     mrblib/mruby-llm/providers/deepseek/request_adapter.rb
     mrblib/mruby-llm/providers/deepseek/request_adapter/completion.rb
@@ -189,6 +192,8 @@ MRuby::Gem::Specification.new('mruby-llm') do |spec|
     mrblib/mruby-llm/providers/deepinfra/images.rb
     mrblib/mruby-llm/providers/deepinfra/audio.rb
     mrblib/mruby-llm/providers/moonshot.rb
+    mrblib/mruby-llm/providers/alibaba.rb
+    mrblib/mruby-llm/providers/alibaba/request_adapter.rb
     mrblib/mruby-llm/providers/mistral/request_adapter.rb
     mrblib/mruby-llm/providers/mistral/request_adapter/completion.rb
     mrblib/mruby-llm/providers/mistral.rb

@@ -35,18 +35,6 @@ module LLM
   #   ctx.messages.each { |m| puts "[#{m.role}] #{m.content}" }
   class Context
 
-    ZERO_USAGE = LLM::Object.from(
-      input_tokens: 0,
-      output_tokens: 0,
-      reasoning_tokens: 0,
-      input_audio_tokens: 0,
-      output_audio_tokens: 0,
-      input_image_tokens: 0,
-      cache_read_tokens: 0,
-      cache_write_tokens: 0,
-      total_tokens: 0
-    )
-
     ##
     # Returns the accumulated message history for this context
     # @return [LLM::Buffer<LLM::Message>]
@@ -101,10 +89,18 @@ module LLM
         klass: params.delete(:guard) || LLM::Guard::Null,
         options: params.delete(:guard_options) || {}
       }
+      @retry_budget = params.delete(:retry_budget) || 0
       tools = [*params.delete(:tools), *load_skills(params.delete(:skills))]
       @params = {model: llm.default_model, schema: nil}.compact.merge!(params)
       @params[:tools] = tools unless tools.empty?
       @messages = LLM::Buffer.new(llm)
+    end
+
+    ##
+    # Returns the retry budget for rate-limited requests.
+    # @return [Integer]
+    def retry_budget
+      @retry_budget
     end
 
     ##
@@ -169,7 +165,7 @@ module LLM
       @owner = @llm.request_owner
       @compactor[:klass].new(self).call(**@compactor[:options])
       repair!(@messages, prompt)
-      prompt, params, res = mode == :responses ? respond(prompt, params) : complete(prompt, params)
+      prompt, params, res = try { mode == :responses ? respond(prompt, params) : complete(prompt, params) }
       self.compacted = false
       if prompt.all?(&:tool_return?)
         @messages.concat prompt.map { LLM::Message.new(@llm.tool_role, _1.content, _1.extra) }
@@ -310,10 +306,10 @@ module LLM
 
     ##
     # Returns token usage accumulated in this context
-    # @return [LLM::Object]
+    # @return [LLM::Usage]
     def usage
       if usage = @messages.find(&:assistant?)&.usage
-        LLM::Object.from(
+        LLM::Usage.new(
           input_tokens: usage.input_tokens || 0,
           output_tokens: usage.output_tokens || 0,
           reasoning_tokens: usage.reasoning_tokens || 0,
@@ -325,7 +321,7 @@ module LLM
           total_tokens: usage.total_tokens || 0
         )
       else
-        ZERO_USAGE
+        LLM::Usage.zero
       end
     end
 
@@ -466,6 +462,26 @@ module LLM
     end
 
     private
+
+    ##
+    # Runs a network call, retrying it on {LLM::RateLimitError} up to the
+    # retry budget. Each retry notifies the stream and sleeps a growing
+    # interval (2s, 4s, 6s, ...) rather than the server's `retry_after`.
+    # A 429 is refused before any content streams, so retrying the same
+    # request loses nothing. The bare `retry` below re-runs the method
+    # body while `attempts ||= 0` keeps the count across attempts.
+    # @api private
+    # @return [Object]
+    def try
+      attempts ||= 0
+      yield
+    rescue LLM::RateLimitError => error
+      raise error if attempts >= retry_budget
+      attempts += 1
+      stream.on_rate_limit(error) if LLM::Stream === stream
+      sleep 2.0 * attempts
+      retry
+    end
 
     ##
     # Binds runtime metadata onto an active stream.

@@ -60,10 +60,14 @@ module LLM::Test
 
     def perform_streaming(route, body, stream)
       response = LLM::Transport::Response.new(route.code, route.headers, "")
-      decoder = stream.decoder.new(stream.parser.new(stream.streamer))
-      decoder << body
-      parsed = decoder.body
-      response.body = (Hash === parsed || Array === parsed) ? LLM::Object.from(parsed) : parsed
+      if response.success? && route.headers["content-type"].to_s.include?("text/event-stream")
+        decoder = stream.decoder.new(stream.parser.new(stream.streamer))
+        decoder << body
+        parsed = decoder.body
+        response.body = (Hash === parsed || Array === parsed) ? LLM::Object.from(parsed) : parsed
+      else
+        response.body = body
+      end
       response
     ensure
       decoder&.free
