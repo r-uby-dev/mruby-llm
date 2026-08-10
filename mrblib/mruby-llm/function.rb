@@ -109,6 +109,13 @@ class LLM::Function
   attr_accessor :model
 
   ##
+  # Returns the guard that protects this function, or nil.
+  # The context stamps the guard onto the functions it binds, so any task
+  # built from this function checks it before the tool runs.
+  # @return [LLM::Guard, nil]
+  attr_accessor :guard
+
+  ##
   # @param [String] name The function name
   # @yieldparam [LLM::Function] self The function object
   def initialize(name, &b)
@@ -198,6 +205,11 @@ class LLM::Function
   # @return [LLM::Function::Task]
   #   Returns a task whose `#value` is an {LLM::Function::Return}.
   def task(strategy, options = {})
+    ##
+    # Check the function's guard on the calling thread before handing
+    # the tool to the strategy. The task carries the blocked result and
+    # returns it without running if the guard intervenes.
+    options = options.merge(guarded: @guard&.call(function: self))
     case strategy
     when :sequential
       Sequential::Task.new(self, options)
@@ -261,6 +273,20 @@ class LLM::Function
       type: LLM::NoSuchToolError.name,
       message: "tool not found"
     })
+  end
+
+  ##
+  # Builds an {LLM::Function::Return LLM::Function::Return} for this
+  # function, using its own id and name. The given keywords become the
+  # return's value.
+  # @note
+  #   `return` is a Ruby keyword, so this is defined via
+  #   {Kernel#define_method Kernel#define_method}.
+  # @param [Hash] value
+  #  The return content, eg `{error: true, type: ..., message: ...}`.
+  # @return [LLM::Function::Return]
+  define_method(:return) do |value|
+    Return.new(id, name, value)
   end
 
   ##

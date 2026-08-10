@@ -16,6 +16,9 @@ MRuby::Gem::Specification.new('mruby-llm') do |spec|
     mrblib/mruby-llm/transport/request.rb
     mrblib/mruby-llm/transport/response.rb
     mrblib/mruby-llm/error.rb
+    mrblib/mruby-llm/guard.rb
+    mrblib/mruby-llm/guard/null.rb
+    mrblib/mruby-llm/guard/loop.rb
     mrblib/mruby-llm/hash.rb
     mrblib/mruby-llm/utils.rb
     mrblib/mruby-llm/json.rb
@@ -202,7 +205,6 @@ MRuby::Gem::Specification.new('mruby-llm') do |spec|
     mrblib/mruby-llm/tools/swap_text.rb
     mrblib/mruby-llm/tools/write_file.rb
     mrblib/mruby-llm/skill.rb
-    mrblib/mruby-llm/loop_guard.rb
   ].map { File.expand_path(_1, __dir__) }
 
   if ENV["ENV"] == "TEST"
