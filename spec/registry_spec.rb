@@ -207,6 +207,81 @@ describe "LLM::Registry" do
       end
     end
   end
+
+  describe "#keys" do
+    let(:provider) { :openai }
+
+    it "returns the model names" do
+      expect(registry.keys).must_include "gpt-4.1"
+    end
+  end
+
+  describe "#models" do
+    let(:provider) { :openai }
+
+    it "returns registry models" do
+      registry.models.each do |model|
+        expect(model).must_be_instance_of LLM::Registry::Model
+      end
+    end
+
+    it "exposes the model ids" do
+      expect(registry.models.map(&:id)).must_include "gpt-4.1"
+    end
+  end
+
+  describe "LLM::Registry::Model" do
+    let(:openai) { LLM::Registry.for(:openai) }
+    let(:model) { openai.models.find { _1.id == "gpt-4.1" } }
+
+    it "exposes a display name" do
+      expect(model.name).must_be_instance_of String
+    end
+
+    it "exposes the context window" do
+      expect(model.context_window).must_be_instance_of Integer
+    end
+
+    it "exposes the cost object" do
+      expect(model.cost).must_be_instance_of LLM::Object
+    end
+
+    it "exposes the input and output costs" do
+      expect(model.input_cost).must_be_kind_of Numeric
+      expect(model.output_cost).must_be_kind_of Numeric
+    end
+
+    it "orders cheaper models before expensive ones" do
+      cheap = openai.models.find { _1.id == "gpt-4o-mini" }
+      expensive = openai.models.find { _1.id == "o1-pro" }
+      expect(cheap < expensive).must_equal true
+    end
+
+    it "sorts unpriced models after priced ones" do
+      priced = openai.models.find { !_1.input_cost.nil? }
+      unpriced = openai.models.find { _1.input_cost.nil? }
+      expect(priced < unpriced).must_equal true
+    end
+
+    it "identifies a text LLM from both directions" do
+      expect(model.text?).must_equal true
+    end
+
+    it "excludes generation models from text?" do
+      tts = LLM::Registry.for(:google).models.find { _1.id == "gemini-3.1-flash-tts-preview" }
+      expect(tts.text?).must_equal false
+    end
+
+    it "reports a modality supported on either side" do
+      qwen = LLM::Registry.for(:alibaba).models.find { _1.id == "qwen3.8-max" }
+      expect(qwen.pdf?).must_equal true
+    end
+
+    it "distinguishes input from output support" do
+      expect(model.input?("pdf")).must_equal true
+      expect(model.output?("image")).must_equal false
+    end
+  end
 end
 
 Minitest.run(ARGV) || exit(1)

@@ -34,35 +34,60 @@ class LLM::Registry
   end
 
   ##
+  # Returns the model keys (names) in the registry.
+  # @return [Array<String>]
+  def keys
+    @models.keys
+  end
+
+  ##
+  # Returns all models as {LLM::Registry::Model} objects.
+  # @return [Array<LLM::Registry::Model>]
+  def models
+    @models.map { |id, data| Model.new(data.merge(id:)) }
+  end
+
+  ##
+  # @return [Array<String>]
+  def env
+    @registry.env
+  end
+
+  ##
   # @return [LLM::Object]
   #  Returns model costs
   def cost(model:)
-    lookup(model:).cost
+    find(model:).cost
   end
 
   ##
   # @return [LLM::Object]
   #  Returns model modalities
   def modalities(model:)
-    lookup(model:).modalities
+    find(model:).modalities
   end
 
   ##
   # @return [LLM::Object]
   #  Returns model limits such as the context window size
   def limit(model:)
-    lookup(model:).limit
+    find(model:).limit
   end
 
   private
 
-  def lookup(model:)
+  ##
+  # Find a model, or raise an error
+  # @param [String] model
+  #  Model ID
+  # @return [LLM::Registry::Model]
+  def find(model:)
     if @models.key?(model)
-      @models[model]
+      Model.new(@models[model])
     else
       fallback = fallback_model(model) || "none"
       if @models.key?(fallback)
-        @models[fallback]
+        Model.new(@models[fallback])
       else
         raise LLM::NoSuchModelError, "no such model: #{model} (fallback: #{fallback})"
       end

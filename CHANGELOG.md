@@ -198,6 +198,16 @@ and fixes that bring mruby-llm up to parity with llm.rb v14.0.0.
   `moonshotai/Kimi-K2.7-Code`, `moonshotai/Kimi-K3`, and
   `thinkingmachines/Inkling-Small`.
 
+* **Add `LLM::Registry::Model` and `Registry#keys` / `#models` / `#env`** <br>
+  `LLM::Registry` now exposes the model names through `#keys` and wraps
+  every registry entry in a `LLM::Registry::Model` value object through
+  `#models`. Models are `Comparable` by price (input cost first, then
+  output cost, with unpriced models sorting last) and carry the metadata
+  predicates `tool_call?`, `reasoning?`, `structured_output?`,
+  `open_weights?`, and `text?`, plus the modality queries `input?` /
+  `output?` (`image?`, `audio?`, `pdf?`, `video?`). `#env` returns the
+  provider's environment variable names.
+
 ### Change
 
 * **Shell out for glob matching in `LLM::Tool::Ls`** <br>

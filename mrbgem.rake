@@ -48,6 +48,7 @@ MRuby::Gem::Specification.new('mruby-llm') do |spec|
     mrblib/mruby-llm/schema.rb
     mrblib/mruby-llm/contract.rb
     mrblib/mruby-llm/contract/completion.rb
+    mrblib/mruby-llm/registry/model.rb
     mrblib/mruby-llm/registry.rb
     mrblib/mruby-llm/model.rb
     mrblib/mruby-llm/prompt.rb
