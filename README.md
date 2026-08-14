@@ -24,8 +24,8 @@ build software as or more capable as CRuby can, and on the same
 platforms.
 
 It is recommended to read the [deepdive.md](https://r.uby.dev/llm/deepdive)
-guides if you want to learn more about llm.rb. I read them from time to time
-and put a lot of effort into maintaining the deepdive and associated
+guides if you want a thorough introduction to llm.rb. I read them from time
+to time and put a lot of effort into maintaining the deepdive and associated
 documentation. The deepdive covers all llm.rb features.
 
 ## Features
