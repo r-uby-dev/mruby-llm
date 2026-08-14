@@ -530,6 +530,13 @@ module LLM
     end
 
     ##
+    # @see LLM::Context#registry
+    # @return [LLM::Registry]
+    def registry
+      @ctx.registry
+    end
+
+    ##
     # @see LLM::Context#params
     # @return [Hash]
     def params

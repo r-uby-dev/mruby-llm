@@ -342,6 +342,14 @@ describe "LLM::Context" do
       expect(usage.total_tokens).must_equal 0
     end
   end
+
+  context "#registry" do
+    it "delegates to the provider's registry" do
+      expect(ctx.registry).must_equal provider.registry
+      expect(ctx.registry).must_be_instance_of LLM::Registry
+      expect(ctx.registry.keys).must_include "gpt-4.1"
+    end
+  end
 end
 
 Minitest.run(ARGV) || exit(1)

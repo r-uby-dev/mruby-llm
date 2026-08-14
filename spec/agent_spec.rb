@@ -425,6 +425,16 @@ describe "LLM::Agent" do
       end
     end
   end
+
+  describe "#registry" do
+    let(:agent) { LLM::Agent.new(llm) }
+
+    it "delegates to the provider's registry" do
+      expect(agent.registry).must_equal llm.registry
+      expect(agent.registry).must_be_instance_of LLM::Registry
+      expect(agent.registry.keys).must_include "gpt-4.1"
+    end
+  end
 end
 
 Minitest.run(ARGV) || exit(1)

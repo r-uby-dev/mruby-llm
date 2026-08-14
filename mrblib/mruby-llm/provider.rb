@@ -89,6 +89,13 @@ class LLM::Provider
   end
 
   ##
+  # Returns the provider's model registry.
+  # @return [LLM::Registry]
+  def registry
+    LLM.registry_for(self)
+  end
+
+  ##
   # Provides an embedding
   # @param [String, Array<String>] input
   #  The input to embed

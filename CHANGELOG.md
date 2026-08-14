@@ -208,6 +208,22 @@ and fixes that bring mruby-llm up to parity with llm.rb v14.0.0.
   `output?` (`image?`, `audio?`, `pdf?`, `video?`). `#env` returns the
   provider's environment variable names.
 
+* **Discover API keys from the environment** <br>
+  The cloud provider factories (`LLM.anthropic`, `LLM.google`,
+  `LLM.deepseek`, `LLM.openai`, `LLM.xai`, `LLM.mistral`, `LLM.zai`,
+  `LLM.moonshot`, `LLM.alibaba`, and `LLM.aliyun`) now resolve the
+  provider's API key automatically when no `key:` is given, by walking
+  the environment variable names listed in the models.dev registry. So
+  `LLM.openai` works without an explicit key as long as `OPENAI_API_KEY`
+  (or one of the registry's alternative names) is set in the
+  environment. A missing key raises `ArgumentError`. The local providers
+  (`ollama`, `llamacpp`) keep a `nil` key.
+
+* **Add `LLM::Provider#registry`** <br>
+  `LLM::Provider#registry` returns the provider's model registry, and
+  `LLM::Context#registry` / `LLM::Agent#registry` now delegate to their
+  underlying provider instead of looking it up on their own.
+
 ### Change
 
 * **Shell out for glob matching in `LLM::Tool::Ls`** <br>

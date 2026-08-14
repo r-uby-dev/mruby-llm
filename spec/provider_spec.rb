@@ -59,6 +59,15 @@ describe "LLM::Provider" do
     end
   end
 
+  context "#registry" do
+    let(:provider) { LLM::OpenAI.new(key: "test", host: "example.com", transport:) }
+
+    it "returns the provider's model registry" do
+      expect(provider.registry).must_be_instance_of LLM::Registry
+      expect(provider.registry.keys).must_include "gpt-4.1"
+    end
+  end
+
   context "#build_messages" do
     let(:provider) { provider_class.new(key: "test", host: "example.com", transport:) }
     let(:history) { LLM::Message.new("user", "hi") }

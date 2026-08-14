@@ -461,6 +461,13 @@ module LLM
       0
     end
 
+    ##
+    # Returns the provider's model registry.
+    # @return [LLM::Registry]
+    def registry
+      llm.registry
+    end
+
     private
 
     ##
