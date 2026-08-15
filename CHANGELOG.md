@@ -24,6 +24,12 @@ and fixes that bring mruby-llm up to parity with llm.rb v14.0.0.
 
 ### Breaking
 
+* **Relicense under the MIT License** <br>
+  The project moves from the Business Source License 1.1 (BUSL-1.1) to the
+  MIT License, matching llm.rb. The `LICENSE` file, the README `License`
+  section, and the gem metadata are updated; the BSL change-date, waiver,
+  and commercial-license terms are removed.
+
 * **Rename `Context#functions` to `pending_functions`** <br>
   `LLM::Context#functions` and `#functions?` are renamed to
   `pending_functions` / `pending_functions?` to match llm.rb. The old
@@ -284,6 +290,18 @@ and fixes that bring mruby-llm up to parity with llm.rb v14.0.0.
   pass a concrete `LLM::Transport` class or instance instead.
 
 ### Change
+
+* **Rewrite README.md to match llm.rb** <br>
+  The README is rewritten to mirror llm.rb's README: a shared Welcome,
+  Quick start sections for Agents (with Stream, Tools, Skills,
+  Concurrency, Cancellation, Persistence, Structured outputs, Guards,
+  Transformers, Compactors, Automatic retries, Observability, and As a
+  subclass), Providers (Implicit, Explicit, Model Registry, Transports),
+  RAG, MCP, A2A, Images, FAQ, Applications, Resources, and License.
+  Features that do not exist on mruby are dropped (the REPL and CLI,
+  ActiveRecord/Sequel, the Telemetry tracer, and the Radicle mirror),
+  and the provider list, concurrency strategies, transports, and image
+  examples are adapted to the mruby runtime.
 
 * **openai: default to `gpt-5.6-luna`** <br>
   The default OpenAI chat model has changed from `gpt-5.4-mini` to

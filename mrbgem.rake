@@ -1,7 +1,7 @@
 load File.join(__dir__, 'mrblib', 'mruby-llm', 'version.rb')
 
 MRuby::Gem::Specification.new('mruby-llm') do |spec|
-  spec.license = 'BUSL-1.1'
+  spec.license = 'MIT'
   spec.authors = '0x1eef'
   spec.version = LLM::VERSION
   spec.description = 'Ruby toolkit for multiple Large Language Models (LLMs)'
