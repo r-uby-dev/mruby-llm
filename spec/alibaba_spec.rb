@@ -5,6 +5,20 @@ describe "LLM::Alibaba" do
   let(:transport) { LLM::Test::Transport.new(root:) }
   let(:llm) { LLM.alibaba(key: "test-key", transport:) }
 
+  before do
+    @saved_keys = {}
+    %w[ALIBABA_API_KEY ALIBABA_API_HOST DASHSCOPE_API_KEY DASHSCOPE_API_HOST].each do |name|
+      @saved_keys[name] = ENV[name]
+      ENV.delete(name)
+    end
+  end
+
+  after do
+    @saved_keys.each do |name, value|
+      value.nil? ? ENV.delete(name) : ENV[name] = value
+    end
+  end
+
   it "builds the Alibaba provider with its API defaults" do
     expect(LLM::OpenAI === llm).must_equal true
     expect(llm.name).must_equal :alibaba

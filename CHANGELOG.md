@@ -185,7 +185,7 @@ and fixes that bring mruby-llm up to parity with llm.rb v14.0.0.
   through its OpenAI-compatible API (`LLM.alibaba(key:)`, aliased as
   `LLM.aliyun`). The default host is the pay-as-you-go endpoint
   (`dashscope-intl.aliyuncs.com/compatible-mode/v1`) — override it
-  globally with the `ALIBABA_API_HOST` environment variable or per
+  globally with the `DASHSCOPE_API_HOST` environment variable or per
   instance with `LLM.alibaba(host: ...)`, for example to point at a
   Token Plan endpoint — with default model `deepseek-v4-flash-0731`,
   plus `data/alibaba.json` registry data. Alibaba does not support
@@ -263,6 +263,15 @@ and fixes that bring mruby-llm up to parity with llm.rb v14.0.0.
   `eql?`, and `to_s` returns the total with two decimals
   (`format("%.2f", total)`).
 
+* **Refresh the registry data across providers** <br>
+  All `data/*.json` files are synced with llm.rb's current registry
+  data. DeepInfra gains the ByteDance Seed-2.0 family,
+  `deepseek-ai/DeepSeek-V3-0324`, and `Qwen/Qwen3-30B-A3B`; Google adds
+  `gemini-3.7-flash` and drops the deprecated `gemini-2.0-flash`,
+  `gemini-3-pro-preview`, and `gemini-2.0-flash-lite` entries; xAI adds
+  `grok-4.6` and refreshes the `grok-4.5` metadata; and the DeepSeek
+  `deepseek-v4-pro` entry is updated with current metadata.
+
 ### Change
 
 * **Shell out for glob matching in `LLM::Tool::Ls`** <br>
@@ -275,6 +284,13 @@ and fixes that bring mruby-llm up to parity with llm.rb v14.0.0.
 * **Do not mutate caller params in constructors** <br>
   `LLM::Context#initialize` and `LLM::Agent#initialize` copy `params`
   before deleting keys, so the caller's hash is no longer modified.
+
+* **alibaba: use `DASHSCOPE_API_KEY` / `DASHSCOPE_API_HOST`** <br>
+  `LLM::Alibaba` now reads its API key from `DASHSCOPE_API_KEY` and its
+  host from `DASHSCOPE_API_HOST`, following the models.dev registry
+  convention — the `ALIBABA_API_KEY` / `ALIBABA_API_HOST` names are no
+  longer consulted. `data/alibaba.json` carries the new environment
+  variable name as well.
 
 ### Fix
 

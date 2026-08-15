@@ -9,7 +9,7 @@ module LLM
   #
   # The default host is the pay-as-you-go DashScope
   # international endpoint (`dashscope-intl.aliyuncs.com`). Configure
-  # a different host either globally through the `ALIBABA_API_HOST`
+  # a different host either globally through the `DASHSCOPE_API_HOST`
   # environment variable, or per instance through
   # `LLM.alibaba(host: "token-plan.ap-southeast-1.maas.aliyuncs.com")`
   # (for example Alibaba's Token Plan).
@@ -18,7 +18,7 @@ module LLM
   #   #!/usr/bin/env ruby
   #   require "llm"
   #
-  #   llm = LLM.alibaba(key: ENV["ALIBABA_API_KEY"])
+  #   llm = LLM.alibaba(key: ENV["DASHSCOPE_API_KEY"])
   #   ctx = LLM::Context.new(llm)
   #   ctx.talk "Hello"
   class Alibaba < OpenAI
@@ -30,7 +30,7 @@ module LLM
     # @param host (see LLM::Provider#initialize)
     # @param base_path (see LLM::Provider#initialize)
     # @return [LLM::Alibaba]
-    def initialize(host: ENV.fetch("ALIBABA_API_HOST", HOST), base_path: BASE_PATH, **)
+    def initialize(host: ENV.fetch("DASHSCOPE_API_HOST", HOST), base_path: BASE_PATH, **)
       super(host:, base_path:, **)
     end
 

@@ -6,7 +6,7 @@ describe "LLM" do
       %w[
         OPENAI_API_KEY ANTHROPIC_API_KEY GOOGLE_API_KEY GOOGLE_GENERATIVE_AI_API_KEY
         GEMINI_API_KEY DEEPSEEK_API_KEY DEEPINFRA_API_KEY XAI_API_KEY
-        MISTRAL_API_KEY ZHIPU_API_KEY MOONSHOT_API_KEY ALIBABA_API_KEY
+        MISTRAL_API_KEY ZHIPU_API_KEY MOONSHOT_API_KEY DASHSCOPE_API_KEY
       ]
     end
 
@@ -74,7 +74,7 @@ describe "LLM" do
       ENV["MISTRAL_API_KEY"] = "sk-mistral"
       expect(LLM.mistral).must_be_instance_of LLM::Mistral
 
-      ENV["ALIBABA_API_KEY"] = "sk-alibaba"
+      ENV["DASHSCOPE_API_KEY"] = "sk-alibaba"
       expect(LLM.alibaba).must_be_instance_of LLM::Alibaba
       expect(LLM.aliyun).must_be_instance_of LLM::Alibaba
     end

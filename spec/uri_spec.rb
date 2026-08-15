@@ -77,3 +77,5 @@ describe "LLM::URI.parse" do
     end
   end
 end
+
+Minitest.run(ARGV) || exit(1)
