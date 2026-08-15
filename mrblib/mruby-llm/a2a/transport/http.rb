@@ -5,6 +5,13 @@ class LLM::A2A
     ##
     # The {LLM::A2A::Transport::HTTP} class provides the HTTP+JSON/REST
     # protocol binding for the A2A protocol.
+    #
+    # Unlike llm.rb, this transport does not resolve `persistent:`
+    # connections or `Symbol` transport shortcuts (for example
+    # `:net_http_persistent`): the mruby transport stack is curl-based
+    # ({LLM::Transport::Curl}) and has no persistent variant. Pass a
+    # concrete {LLM::Transport} class or instance through `transport:`,
+    # or leave it `nil` to use the default curl transport.
     class HTTP
       ##
       # @param [String] url The base URL of the A2A agent

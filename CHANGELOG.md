@@ -272,6 +272,17 @@ and fixes that bring mruby-llm up to parity with llm.rb v14.0.0.
   `grok-4.6` and refreshes the `grok-4.5` metadata; and the DeepSeek
   `deepseek-v4-pro` entry is updated with current metadata.
 
+* **Cover the A2A protocol with specs** <br>
+  `spec/a2a_spec.rb` exercises `#send_message`, `#card`,
+  `#extended_card`, `#tasks` (get, list, subscribe, cancel),
+  `#notifications`, the streaming path, base-path prefixing, the
+  `.rest` / `.jsonrpc` client builders, and skill-to-tool adaptation —
+  the a2a runtime was previously untested. The `LLM::A2A::Transport::HTTP`
+  doc comment also records the transport divergence from llm.rb: the
+  mruby stack is curl-based, so `persistent:` connections and `Symbol`
+  transport shortcuts like `:net_http_persistent` are not resolved;
+  pass a concrete `LLM::Transport` class or instance instead.
+
 ### Change
 
 * **openai: default to `gpt-5.6-luna`** <br>
