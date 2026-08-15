@@ -307,22 +307,38 @@ module LLM
     ##
     # Returns token usage accumulated in this context
     # @return [LLM::Usage]
-    def usage
-      if usage = @messages.find(&:assistant?)&.usage
-        LLM::Usage.new(
-          input_tokens: usage.input_tokens || 0,
-          output_tokens: usage.output_tokens || 0,
-          reasoning_tokens: usage.reasoning_tokens || 0,
-          input_audio_tokens: usage.input_audio_tokens || 0,
-          output_audio_tokens: usage.output_audio_tokens || 0,
-          input_image_tokens: usage.input_image_tokens || 0,
-          cache_read_tokens: usage.cache_read_tokens || 0,
-          cache_write_tokens: usage.cache_write_tokens || 0,
-          total_tokens: usage.total_tokens || 0
-        )
-      else
-        LLM::Usage.zero
-      end
+    def token_usage
+      @messages
+        .select(&:assistant?)
+        .map(&:token_usage)
+        .compact
+        .reduce(LLM::Usage.zero, :+)
+    end
+    alias_method :usage, :token_usage
+
+    ##
+    # @return [Integer, nil]
+    #  Returns the live context size (in tokens) of the most
+    #  recent assistant message.
+    def context_used
+      @messages
+        .find(&:assistant?)
+        &.token_usage
+        &.total_tokens
+    end
+
+    ##
+    # @return [Rational, nil]
+    #  Returns the fraction of the context window currently used.
+    #  For example: Rational(100, 10_000), or nil when unknown
+    def context_usage
+      return nil if @messages.size < 2
+      used = context_used
+      return nil if used.nil?
+      total = context_window
+      total.nil? || total <= 0 ? nil : Rational(used, total)
+    rescue LLM::NoSuchModelError, LLM::NoSuchRegistryError
+      nil
     end
 
     ##
@@ -449,16 +465,15 @@ module LLM
     # The context window is the maximum amount of input and output
     # tokens a model can consider in a single request.
     # @note
-    #   This method returns 0 when the provider or
-    #   model can't be found within {LLM::Registry}.
-    # @return [Integer]
+    #  This method returns nil when the context window size
+    #  is not known to the runtime
+    # @return [Integer, nil]
     def context_window
-      LLM
-        .registry_for(llm)
+      registry
         .limit(model:)
         .context
     rescue LLM::NoSuchModelError, LLM::NoSuchRegistryError
-      0
+      nil
     end
 
     ##

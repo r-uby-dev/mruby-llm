@@ -67,6 +67,18 @@ and fixes that bring mruby-llm up to parity with llm.rb v14.0.0.
   The constant was never raised as an exception; guarded tool returns
   now use the string `"guard_error"` as their error type.
 
+* **Rename `usage` to `token_usage` across contexts, agents, and messages** <br>
+  `LLM::Context#usage`, `LLM::Agent#usage`, and `LLM::Message#usage` are
+  now aliases of `token_usage`. `LLM::Message#token_usage` returns a copy
+  of `LLM::Usage` instead of `LLM::Object`, and only returns a value for
+  assistant messages.
+
+* **`LLM::Context#context_window` returns `nil` when unknown** <br>
+  `LLM::Context#context_window` now returns `nil` when the model's
+  context window size is not known to the runtime, instead of `0`. This
+  makes the code check for a window instead of a number, so an unknown
+  window no longer reads as a real (zero) size.
+
 ### Add
 
 * **Add the llm.rb concurrency model** <br>
@@ -223,6 +235,24 @@ and fixes that bring mruby-llm up to parity with llm.rb v14.0.0.
   `LLM::Provider#registry` returns the provider's model registry, and
   `LLM::Context#registry` / `LLM::Agent#registry` now delegate to their
   underlying provider instead of looking it up on their own.
+
+* **Aggregate token usage across all assistant messages** <br>
+  `LLM::Context#token_usage` (alias `usage`) now sums token usage across
+  every assistant message in the conversation instead of returning only
+  the first message's usage. `LLM::Usage` is now a plain class with
+  `from`, `+`, and `==` and zero-filled accessors, so usages can be
+  added, copied, and compared.
+
+* **Add `LLM::Context#context_used` and `LLM::Agent#context_used`** <br>
+  Return the live context size (in tokens) of the most recent assistant
+  message, or `nil` when no assistant message has a recorded token usage.
+  This fills the gap left after `token_usage` became accumulative and no
+  longer represented a single turn.
+
+* **Add `LLM::Context#context_usage` and `LLM::Agent#context_usage`** <br>
+  Return the fraction of the model's context window currently used as a
+  `Rational` (for example `Rational(100, 10_000)`), or `nil` when the
+  used amount or the window size is unknown.
 
 ### Change
 

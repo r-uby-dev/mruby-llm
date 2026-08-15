@@ -320,9 +320,9 @@ describe "LLM::Context" do
     end
   end
 
-  context "#usage" do
+  context "#token_usage" do
     it "returns LLM::Usage.zero before any turn" do
-      usage = ctx.usage
+      usage = ctx.token_usage
       expect(usage).must_be_instance_of LLM::Usage
       expect(usage.input_tokens).must_equal 0
       expect(usage.output_tokens).must_equal 0
@@ -330,9 +330,13 @@ describe "LLM::Context" do
       expect(usage.total_tokens).must_equal 0
     end
 
-    it "zero-fills missing token fields from the last assistant message" do
+    it "aliases usage to token_usage" do
+      expect(ctx.usage).must_equal ctx.token_usage
+    end
+
+    it "zero-fills missing token fields" do
       ctx.messages << LLM::Message.new("assistant", "hello", usage: LLM::Object.from(input_tokens: 3))
-      usage = ctx.usage
+      usage = ctx.token_usage
       expect(usage).must_be_instance_of LLM::Usage
       expect(usage.input_tokens).must_equal 3
       expect(usage.output_tokens).must_equal 0
@@ -340,6 +344,65 @@ describe "LLM::Context" do
       expect(usage.cache_read_tokens).must_equal 0
       expect(usage.cache_write_tokens).must_equal 0
       expect(usage.total_tokens).must_equal 0
+    end
+
+    it "sums usage across all assistant messages" do
+      ctx.messages << LLM::Message.new("user", "hi")
+      ctx.messages << LLM::Message.new(
+        "assistant", "one",
+        usage: LLM::Object.from(input_tokens: 3, output_tokens: 2, total_tokens: 5)
+      )
+      ctx.messages << LLM::Message.new("user", "again")
+      ctx.messages << LLM::Message.new(
+        "assistant", "two",
+        usage: LLM::Object.from(input_tokens: 7, output_tokens: 1, total_tokens: 8)
+      )
+      usage = ctx.token_usage
+      expect(usage.input_tokens).must_equal 10
+      expect(usage.output_tokens).must_equal 3
+      expect(usage.total_tokens).must_equal 13
+    end
+  end
+
+  context "#context_used" do
+    it "returns nil before any turn" do
+      expect(ctx.context_used).must_be_nil
+    end
+
+    it "returns the total tokens of the most recent assistant message" do
+      ctx.messages << LLM::Message.new("user", "hi")
+      ctx.messages << LLM::Message.new("assistant", "hello", usage: LLM::Object.from(total_tokens: 123))
+      expect(ctx.context_used).must_equal 123
+    end
+  end
+
+  context "#context_usage" do
+    it "returns nil when the conversation is too short" do
+      ctx.messages << LLM::Message.new("assistant", "hello", usage: LLM::Object.from(total_tokens: 123))
+      expect(ctx.context_usage).must_be_nil
+    end
+
+    it "returns the fraction of the context window used" do
+      ctx.messages << LLM::Message.new("user", "hi")
+      ctx.messages << LLM::Message.new("assistant", "hello", usage: LLM::Object.from(total_tokens: 500))
+      expect(ctx.context_usage).must_equal Rational(500, ctx.context_window)
+    end
+
+    it "returns nil when the model is not in the registry" do
+      other = LLM::Context.new(provider, model: "no-such-model-xyz")
+      other.messages << LLM::Message.new("user", "hi")
+      other.messages << LLM::Message.new("assistant", "hello", usage: LLM::Object.from(total_tokens: 500))
+      expect(other.context_usage).must_be_nil
+    end
+  end
+
+  context "#context_window" do
+    it "returns the model's context window" do
+      expect(LLM::Context.new(provider, model: "gpt-4.1").context_window).must_equal 1_047_576
+    end
+
+    it "returns nil when the model is not in the registry" do
+      expect(LLM::Context.new(provider, model: "no-such-model-xyz").context_window).must_be_nil
     end
   end
 

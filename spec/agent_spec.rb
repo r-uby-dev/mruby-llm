@@ -435,6 +435,41 @@ describe "LLM::Agent" do
       expect(agent.registry.keys).must_include "gpt-4.1"
     end
   end
+
+  describe "#usage" do
+    let(:agent) { LLM::Agent.new(llm) }
+
+    it "delegates to the wrapped context" do
+      ctx = agent.instance_variable_get(:@ctx)
+      ctx.messages << LLM::Message.new("assistant", "hello", usage: LLM::Object.from(input_tokens: 3))
+      expect(agent.usage).must_equal ctx.usage
+    end
+
+    it "aliases token_usage to usage" do
+      expect(agent.token_usage).must_equal agent.usage
+    end
+  end
+
+  describe "#context_used" do
+    let(:agent) { LLM::Agent.new(llm) }
+
+    it "delegates to the wrapped context" do
+      ctx = agent.instance_variable_get(:@ctx)
+      ctx.messages << LLM::Message.new("assistant", "hello", usage: LLM::Object.from(total_tokens: 123))
+      expect(agent.context_used).must_equal 123
+    end
+  end
+
+  describe "#context_usage" do
+    let(:agent) { LLM::Agent.new(llm) }
+
+    it "delegates to the wrapped context" do
+      ctx = agent.instance_variable_get(:@ctx)
+      ctx.messages << LLM::Message.new("user", "hi")
+      ctx.messages << LLM::Message.new("assistant", "hello", usage: LLM::Object.from(total_tokens: 123))
+      expect(agent.context_usage).must_equal ctx.context_usage
+    end
+  end
 end
 
 Minitest.run(ARGV) || exit(1)

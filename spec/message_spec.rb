@@ -40,6 +40,24 @@ describe "LLM::Message" do
     end
   end
 
+  describe "#token_usage" do
+    it "returns a copy of LLM::Usage for assistant messages" do
+      msg = LLM::Message.new("assistant", "hello", usage: LLM::Object.from(input_tokens: 3))
+      expect(msg.token_usage).must_be_instance_of LLM::Usage
+      expect(msg.token_usage.input_tokens).must_equal 3
+    end
+
+    it "returns nil for non-assistant messages" do
+      msg = LLM::Message.new("user", "hello", usage: LLM::Object.from(input_tokens: 3))
+      expect(msg.token_usage).must_be_nil
+    end
+
+    it "aliases usage to token_usage" do
+      msg = LLM::Message.new("assistant", "hello", usage: LLM::Object.from(input_tokens: 3))
+      expect(msg.usage).must_equal msg.token_usage
+    end
+  end
+
   describe "#image_url?" do
     let(:msg) { LLM::Message.new("user", content) }
 
