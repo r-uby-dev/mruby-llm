@@ -254,6 +254,15 @@ and fixes that bring mruby-llm up to parity with llm.rb v14.0.0.
   `Rational` (for example `Rational(100, 10_000)`), or `nil` when the
   used amount or the window size is unknown.
 
+* **Harden `LLM::Cost`** <br>
+  `LLM::Cost` is now a plain class instead of a `Struct`. The accessors
+  return zero-filled `Float`s (`0.0`) instead of `nil`, `Cost.from(ctx)`
+  prices input tokens minus cache-read tokens and output tokens minus
+  reasoning tokens, falls back to the output rate when a model has no
+  reasoning rate, `Cost` instances compare by breakdown with `==` /
+  `eql?`, and `to_s` returns the total with two decimals
+  (`format("%.2f", total)`).
+
 ### Change
 
 * **Shell out for glob matching in `LLM::Tool::Ls`** <br>

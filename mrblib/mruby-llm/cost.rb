@@ -5,36 +5,7 @@
 # cost breakdown for a provider request. It stores input,
 # output, input audio, output audio, input image, cache read, cache write,
 # and reasoning costs separately and can return the total.
-#
-# @attr [Float] input_costs
-#   Returns the input cost, aliased as `input`
-# @attr [Float] output_costs
-#   Returns the output cost, aliased as `output`
-# @attr [Float, nil] input_audio_costs
-#   Returns the input audio cost, or nil when no input audio tokens
-#   were used, aliased as `input_audio`
-# @attr [Float, nil] output_audio_costs
-#   Returns the output audio cost, or nil when no output audio tokens
-#   were used, aliased as `output_audio`
-# @attr [Float, nil] input_image_costs
-#   Returns the input image cost, or nil when no input image tokens
-#   were used, aliased as `input_image`
-# @attr [Float, nil] cache_read_costs
-#   Returns the cache read cost, or nil when no cache tokens
-#   were used, aliased as `cache_read`
-# @attr [Float, nil] cache_write_costs
-#   Returns the cache write cost, or nil when no cache creation
-#   tokens were used, aliased as `cache_write`
-# @attr [Float, nil] reasoning_costs
-#   Returns the reasoning cost, or nil when no reasoning tokens
-#   were used, aliased as `reasoning`
-class LLM::Cost < Struct.new(
-  :input_costs, :output_costs,
-  :input_audio_costs, :output_audio_costs,
-  :cache_read_costs, :cache_write_costs,
-  :input_image_costs, :reasoning_costs,
-  keyword_init: true
-)
+class LLM::Cost
   ##
   # Build a cost breakdown from token usage and model pricing.
   # @param [LLM::Context] ctx
@@ -42,15 +13,18 @@ class LLM::Cost < Struct.new(
   # @return [LLM::Cost]
   def self.from(ctx)
     pricing = LLM.registry_for(ctx.llm).cost(model: ctx.model)
+    usage = ctx.usage
+    output = usage.output_tokens - usage.reasoning_tokens
+    input = usage.input_tokens - usage.cache_read_tokens
     new(
-      input_costs: price(pricing.input, ctx.usage.input_tokens),
-      output_costs: price(pricing.output, ctx.usage.output_tokens),
-      input_audio_costs: price(pricing.input_audio, ctx.usage.input_audio_tokens),
-      output_audio_costs: price(pricing.output_audio, ctx.usage.output_audio_tokens),
-      input_image_costs: price(pricing.input, ctx.usage.input_image_tokens),
-      cache_read_costs: price(pricing.cache_read, ctx.usage.cache_read_tokens),
-      cache_write_costs: price(pricing.cache_write, ctx.usage.cache_write_tokens),
-      reasoning_costs: price(pricing.output, ctx.usage.reasoning_tokens)
+      input_costs: price(pricing.input, input),
+      output_costs: price(pricing.output, output),
+      input_audio_costs: price(pricing.input_audio, usage.input_audio_tokens),
+      output_audio_costs: price(pricing.output_audio, usage.output_audio_tokens),
+      input_image_costs: price(pricing.input, usage.input_image_tokens),
+      cache_read_costs: price(pricing.cache_read, usage.cache_read_tokens),
+      cache_write_costs: price(pricing.cache_write, usage.cache_write_tokens),
+      reasoning_costs: price(pricing.reasoning || pricing.output, usage.reasoning_tokens)
     )
   rescue LLM::NoSuchModelError, LLM::NoSuchRegistryError
     new
@@ -63,6 +37,102 @@ class LLM::Cost < Struct.new(
     return if rate.nil? || rate.to_f.zero?
     ((rate.to_f / 1_000_000.0) * tokens.to_i).round(12)
   end
+
+  ##
+  # @param [Float, nil] input_costs
+  # @param [Float, nil] output_costs
+  # @param [Float, nil] input_audio_costs
+  # @param [Float, nil] output_audio_costs
+  # @param [Float, nil] input_image_costs
+  # @param [Float, nil] cache_read_costs
+  # @param [Float, nil] cache_write_costs
+  # @param [Float, nil] reasoning_costs
+  # @return [LLM::Cost]
+  def initialize(input_costs: nil, output_costs: nil, input_audio_costs: nil,
+                 output_audio_costs: nil, input_image_costs: nil,
+                 cache_read_costs: nil, cache_write_costs: nil,
+                 reasoning_costs: nil)
+    @input_costs = input_costs
+    @output_costs = output_costs
+    @input_audio_costs = input_audio_costs
+    @output_audio_costs = output_audio_costs
+    @input_image_costs = input_image_costs
+    @cache_read_costs = cache_read_costs
+    @cache_write_costs = cache_write_costs
+    @reasoning_costs = reasoning_costs
+  end
+
+  ##
+  # @return [Boolean]
+  #  Returns true when two costs hold the same breakdown
+  def ==(other)
+    other.is_a?(LLM::Cost) and other.to_h == to_h
+  end
+  alias_method :eql?, :==
+
+  ##
+  # @return [Float]
+  #  Returns the input cost
+  def input
+    @input_costs || 0.to_f
+  end
+  alias_method :input_costs, :input
+
+  ##
+  # @return [Float]
+  #  Returns the output cost
+  def output
+    @output_costs || 0.to_f
+  end
+  alias_method :output_costs, :output
+
+  ##
+  # @return [Float]
+  #  Returns the input audio cost
+  def input_audio
+    @input_audio_costs || 0.to_f
+  end
+  alias_method :input_audio_costs, :input_audio
+
+  ##
+  # @return [Float]
+  #  Returns the output audio cost
+  def output_audio
+    @output_audio_costs || 0.to_f
+  end
+  alias_method :output_audio_costs, :output_audio
+
+  ##
+  # @return [Float]
+  #  Returns the input image cost
+  def input_image
+    @input_image_costs || 0.to_f
+  end
+  alias_method :input_image_costs, :input_image
+
+  ##
+  # @return [Float]
+  #  Returns the cache read cost
+  def cache_read
+    @cache_read_costs || 0.to_f
+  end
+  alias_method :cache_read_costs, :cache_read
+
+  ##
+  # @return [Float]
+  #  Returns the cache write cost
+  def cache_write
+    @cache_write_costs || 0.to_f
+  end
+  alias_method :cache_write_costs, :cache_write
+
+  ##
+  # @return [Float]
+  #  Returns the reasoning cost
+  def reasoning
+    @reasoning_costs || 0.to_f
+  end
+  alias_method :reasoning_costs, :reasoning
 
   ##
   # @return [Float]
@@ -92,17 +162,6 @@ class LLM::Cost < Struct.new(
   # @return [String]
   #  Returns the total cost in a human friendly format
   def to_s
-    format("%.12f", total).sub(/\.?0+$/, "")
+    format("%.2f", total)
   end
-
-  ##
-  # Aliases
-  alias_method :input, :input_costs
-  alias_method :output, :output_costs
-  alias_method :input_audio, :input_audio_costs
-  alias_method :output_audio, :output_audio_costs
-  alias_method :cache_read, :cache_read_costs
-  alias_method :cache_write, :cache_write_costs
-  alias_method :input_image, :input_image_costs
-  alias_method :reasoning, :reasoning_costs
 end
