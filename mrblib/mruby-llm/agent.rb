@@ -153,14 +153,14 @@ module LLM
     # The retry budget is the maximum number of times a rate-limited
     # request will be retried before giving up. Each retry sleeps a
     # growing interval, so an exhausted budget surfaces the rate-limit
-    # error instead of blocking indefinitely. Enabled (3) by default; a
+    # error instead of blocking indefinitely. Enabled (5) by default; a
     # raw {LLM::Context} disables it (0) unless configured.
     # @param [Integer] budget
     #  The maximum number of rate-limit retries in a turn.
     # @return [Integer, nil]
     def self.retry_budget(budget = UNDEFINED)
       if budget.equal?(UNDEFINED)
-        @retry_budget.nil? ? 3 : @retry_budget
+        @retry_budget.nil? ? 5 : @retry_budget
       else
         @retry_budget = budget
       end

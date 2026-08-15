@@ -197,7 +197,7 @@ and fixes that bring mruby-llm up to parity with llm.rb v14.0.0.
   `LLM::Context` accepts `retry_budget:` (default 0) and retries
   `LLM::RateLimitError` with a growing sleep (2s, 4s, ...), notifying
   `Stream#on_rate_limit` before each retry. `LLM::Agent.retry_budget` is a
-  class DSL that enables a budget of 3 by default.
+  class DSL that enables a budget of 5 by default.
 
 * **Add `LLM::Usage.zero`** <br>
   `LLM::Context#usage` and `LLM::Agent#usage` now return `LLM::Usage`
@@ -273,6 +273,10 @@ and fixes that bring mruby-llm up to parity with llm.rb v14.0.0.
   `deepseek-v4-pro` entry is updated with current metadata.
 
 ### Change
+
+* **openai: default to `gpt-5.6-luna`** <br>
+  The default OpenAI chat model has changed from `gpt-5.4-mini` to
+  `gpt-5.6-luna`, matching llm.rb.
 
 * **Shell out for glob matching in `LLM::Tool::Ls`** <br>
   The hand-rolled glob engine is replaced by a `find` shell-out, and all

@@ -59,7 +59,7 @@ describe "LLM::Agent" do
       let(:agent) { agent_class.new(llm) }
 
       it "resolves the block against the agent instance" do
-        expect(agent.model).must_equal "gpt-5.4-mini"
+        expect(agent.model).must_equal "gpt-5.6-luna"
       end
     end
 
@@ -67,7 +67,7 @@ describe "LLM::Agent" do
       let(:agent) { LLM::Agent.new(llm) }
 
       it "keeps the provider default model" do
-        expect(agent.model).must_equal "gpt-5.4-mini"
+        expect(agent.model).must_equal "gpt-5.6-luna"
       end
     end
 
@@ -263,7 +263,7 @@ describe "LLM::Agent" do
       let(:agent) { LLM::Agent.new(llm) }
 
       it "enables retries by default on an agent" do
-        expect(agent.instance_variable_get(:@ctx).retry_budget).must_equal 3
+        expect(agent.instance_variable_get(:@ctx).retry_budget).must_equal 5
       end
     end
   end

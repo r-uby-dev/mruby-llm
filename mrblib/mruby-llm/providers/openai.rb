@@ -133,10 +133,10 @@ module LLM
 
     ##
     # Returns the default model for chat completions
-    # @see https://platform.openai.com/docs/models/gpt-5.4-mini gpt-5.4-mini
+    # @see https://platform.openai.com/docs/models/gpt-5.6-luna gpt-5.6-luna
     # @return [String]
     def default_model
-      "gpt-5.4-mini"
+      "gpt-5.6-luna"
     end
 
     private
