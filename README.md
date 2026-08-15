@@ -18,7 +18,9 @@ contexts, and agents.
 Once you learn the fundamentals, everything else falls into place
 naturally. mruby-llm is a port of [llm.rb](https://github.com/r-uby-dev/llm)
 from CRuby to mruby and certain features - such as ActiveRecord support -
-are absent from the mruby runtime.
+are absent from the mruby runtime. The concurrency model is almost
+the same but the available strategies are limited to what mruby and
+its ecosystem provide.
 
 ## Install
 
