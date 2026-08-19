@@ -232,7 +232,7 @@ end
 <summary>Persistence</summary>
 <br>
 
-Set `path:` on an agent for automatic filesystem persistence;
+Set `path:` on an agent for automatic filesystem persistence:
 the agent restores conversation history from the file on startup
 and saves it back after every turn, with no manual serialization
 code. All persistence options use the same underlying serialization.
@@ -325,7 +325,7 @@ class PolicyGuard < LLM::Guard
 end
 
 llm = LLM.deepseek(key: ENV["KEY"])
-agent = LLM::Agent.new(llm, guard: PolicyGuard)
+agent = LLM::Agent.new(llm, tools: [Shell], guard: PolicyGuard)
 ```
 </details>
 
