@@ -671,17 +671,13 @@ File.binwrite "rocket-with-dog.svg", res.images[0].string
 <summary>How do mruby-llm and llm.rb relate?</summary>
 <br>
 <p>
-
 There is a close and ongoing relationship between the
 two projects. The [llm.rb](https://github.com/r-uby-dev/llm)
 project was created first (over three years ago) and it is
-the reference implementation.
-</p>
-<p>
-mruby-llm is a port of llm.rb to mruby. The codebase is
-almost identical, the interface between the two is the
-same, and the main difference between the two is what
-features they support.
+the reference implementation. mruby-llm is a port of llm.rb
+to mruby. The codebase is almost identical, the interface
+between the two is the same, and the main difference between
+the two is what features they support.
 </p>
 <p>
 Most development happens in the llm.rb repository and it
