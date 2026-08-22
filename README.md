@@ -18,7 +18,10 @@ providers, contexts, and agents.
 The most effective way to learn about mruby-llm is to ask
 [the r.uby.dev chatbot](https://r.uby.dev) a question. It is
 connected to the mruby-llm GitHub repository so all answers
-are grounded in the mruby-llm source code.
+are grounded in the mruby-llm source code. The chatbot happens
+to be implemented with [llm.rb](https://github.com/r-uby-dev/llm)
+from the CRuby ecosystem and it happens to be what mruby-llm is
+based on.
 
 ## Install
 
