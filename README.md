@@ -671,6 +671,7 @@ File.binwrite "rocket-with-dog.svg", res.images[0].string
 <summary>How do mruby-llm and llm.rb relate?</summary>
 <br>
 <p>
+
 There is a close and ongoing relationship between the
 two projects. The [llm.rb](https://github.com/r-uby-dev/llm)
 project was created first (over three years ago) and it is
