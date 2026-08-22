@@ -20,7 +20,7 @@ The most effective way to learn about mruby-llm is to ask
 connected to the mruby-llm GitHub repository so all answers
 are grounded in the source code. The chatbot is implemented
 with [llm.rb](https://github.com/r-uby-dev/llm) from the CRuby
-ecosystem and that happens to be what mruby-llm is based on.
+ecosystem and that  happens to be what mruby-llm is based on.
 
 ## Install
 
@@ -671,6 +671,7 @@ File.binwrite "rocket-with-dog.svg", res.images[0].string
 <summary>How do mruby-llm and llm.rb relate?</summary>
 <br>
 <p>
+
 There is a close and ongoing relationship between the
 two projects. The [llm.rb](https://github.com/r-uby-dev/llm)
 project was created first (over three years ago) and it is
