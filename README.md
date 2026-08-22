@@ -20,9 +20,6 @@ The most effective way to learn about mruby-llm is to ask
 connected to the mruby-llm GitHub repository so all answers
 are grounded in the mruby-llm source code.
 
-The mruby-llm project is a port of the [llm.rb](https://github.com/r-uby-dev/llm)
-runtime for CRuby.
-
 ## Install
 
 Source code and build instructions are available from
