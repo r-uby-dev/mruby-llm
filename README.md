@@ -43,7 +43,7 @@ The
 class is the default high-level interface,
 and it is recommended for most use-cases. It manages tool execution
 automatically and
-[guards against infinite loops](https://r.uby.dev/llm/deepdive/advanced/guard),
+guards against infinite loops,
 manages conversation state, and much more.
 
 ```ruby
@@ -61,9 +61,6 @@ with structured callbacks for content,
 reasoning, tool calls, tool returns, and compaction.
 Streams can also observe message transformers, which rewrite
 outgoing messages before they reach the provider.
-
-See the [deepdive.md](https://r.uby.dev/llm/deepdive/fundamentals/stream/)
-to learn more.
 
 ```ruby
 class MyStream < LLM::Stream
@@ -121,7 +118,7 @@ call them on your behalf, and they're one of the most powerful features
 for extending the feature set or abilities of a model.
 
 The runtime also ships with a catalog of built-in tools for
-filesystem, search, and shell operations. <br> See the [deepdive.md](https://r.uby.dev/llm/deepdive/fundamentals/tools) to learn more.
+filesystem, search, and shell operations.
 
 ```ruby
 class ReadFile < LLM::Tool
@@ -149,8 +146,6 @@ calls it, the runtime spawns a subagent with the skill's instructions
 as its system prompt and the skill's own tool set. The subagent runs
 one turn and returns the result, then is discarded. Each call
 is fresh and stateless.
-
-See the [deepdive.md](https://r.uby.dev/llm/deepdive/fundamentals/skills) to learn more.
 
 ##### SKILL.md
 
@@ -187,8 +182,6 @@ The `:task` strategy is lightweight concurrent execution through
 mruby-task. The `:fork` strategy provides a separate process that offers
 isolation from its parent, where the target platform supports it.
 
-See the [deepdive.md](https://r.uby.dev/llm/deepdive/features/concurrency) to learn more.
-
 ```ruby
 llm   = LLM.deepseek(key: ENV["KEY"])
 tools = LLM::Tool.registry
@@ -209,8 +202,6 @@ on the caller and on every active tool. A forked tool gets interrupted
 over the control channel, and pending tools are stopped before they
 run. The in-flight HTTP request is closed too, so a turn you no longer
 want stops without burning tokens.
-
-See the [deepdive.md](https://r.uby.dev/llm/deepdive/advanced/cancellation) to learn more.
 
 ```ruby
 llm = LLM.deepseek(key: ENV["KEY"])
@@ -236,8 +227,6 @@ Set `path:` on an agent for automatic filesystem persistence:
 the agent restores conversation history from the file on startup
 and saves it back after every turn, with no manual serialization
 code. All persistence options use the same underlying serialization.
-
-See the [deepdive.md](https://r.uby.dev/llm/deepdive/features/database) to learn more.
 
 ```ruby
 llm = LLM.deepseek(key: ENV["KEY"])
@@ -312,8 +301,6 @@ and implement
 The pending call arrives as `function:`. Return a value to close
 the call, or `nil` to let it run:
 
-See the [deepdive.md](https://r.uby.dev/llm/deepdive/advanced/guard) to learn more.
-
 ```ruby
 class PolicyGuard < LLM::Guard
   def call(function:)
@@ -338,8 +325,6 @@ It is possible to rewrite outgoing messages before they reach the provider with
 Create a subclass and implement `call(message:)` to scrub sensitive data,
 inject context, or normalize content. The transform runs automatically
 on every turn, so you never have to change your prompt code.
-
-See the [deepdive.md](https://r.uby.dev/llm/deepdive/advanced/transformer) to learn more.
 
 ```ruby
 class RedactEmails < LLM::Transformer
@@ -376,8 +361,6 @@ process through the
 and
 [`LLM::Stream#on_compaction_finish`](https://r.uby.dev/api-docs/llm.rb/LLM/Stream.html#on_compaction_finish)
 callbacks.
-
-See the [deepdive.md](https://r.uby.dev/llm/deepdive/advanced/compaction) to learn more.
 
 ```ruby
 llm = LLM.deepseek(key: ENV["KEY"])
@@ -423,8 +406,6 @@ so switching between them means changing a class name:
 * [`LLM::Tracer::Logger`](https://r.uby.dev/api-docs/llm.rb/LLM/Tracer/Logger.html):
 structured JSON to stdout or a file.
 
-See the [deepdive.md](https://r.uby.dev/llm/deepdive/reference/tracer) to learn more.
-
 ```ruby
 llm = LLM.deepseek(key: ENV["KEY"])
 agent = LLM::Agent.new(llm, tracer: LLM::Tracer::PrettyLogger.new(llm))
@@ -466,8 +447,7 @@ Each provider is constructed with a class-level factory method on
 or
 [`LLM::Agent`](https://r.uby.dev/api-docs/llm.rb/LLM/Agent.html). The
 same API also drives Google Gemini, DeepInfra, xAI, Z.ai, Moonshot,
-Alibaba, Mistral, Ollama, and llama.cpp. See the [deepdive](https://r.uby.dev/llm/deepdive/fundamentals/providers)
-for a full provider reference.
+Alibaba, Mistral, Ollama, and llama.cpp.
 
 <details>
 <summary>Implicit</summary>
@@ -514,8 +494,6 @@ modalities with the gem, sourced from [models.dev](https://models.dev).
 Reach it from any provider, context, or agent, enumerate models, or
 sort them by price.
 
-See the [deepdive.md](https://r.uby.dev/llm/deepdive/reference/model_registry) to learn more.
-
 ```ruby
 llm      = LLM.openai
 registry = llm.registry                # => LLM::Provider#registry
@@ -534,8 +512,6 @@ The `transport:` option selects which HTTP implementation a provider
 uses for network communication. mruby-llm ships a single curl-based
 transport that is always available and is the default, so most
 applications need no configuration at all.
-
-See the [deepdive.md](https://r.uby.dev/llm/deepdive/advanced/transports) to learn more.
 
 ```ruby
 llm = LLM.deepseek(
@@ -559,8 +535,6 @@ or PostgreSQL's [pg-vector](https://github.com/pgvector/pgvector).
 mruby-llm also includes support for OpenAI's vector store API. It
 provides a vector database as a HTTP service but we won't cover
 that here.
-
-See the [deepdive.md](https://r.uby.dev/llm/deepdive/features/embeddings) to learn more.
 
 ```ruby
 llm  = LLM.openai(key: ENV["KEY"])
@@ -760,9 +734,6 @@ available to the general public over SSH.
 
 ## Resources
 
-If you like what you read so far, check out the [deepdive.md](https://r.uby.dev/llm/deepdive/)
-to learn more. Unfortunately it
-wasn't possible to cover every feature without the README becoming a small book.
 The [r.uby.dev](https://r.uby.dev) homepage also includes more learning material
 and resources.
 
