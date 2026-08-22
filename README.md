@@ -447,8 +447,24 @@ Each provider is constructed with a class-level factory method on
 [`LLM::Context`](https://r.uby.dev/api-docs/llm.rb/LLM/Context.html)
 or
 [`LLM::Agent`](https://r.uby.dev/api-docs/llm.rb/LLM/Agent.html). The
-same API also drives Google Gemini, DeepInfra, xAI, Z.ai, Moonshot,
-Alibaba, Mistral, Ollama, and llama.cpp.
+same API drives every one of them, so switching providers is a one-line
+change.
+
+#### What providers does llm.rb support?
+
+* **Anthropic** (`LLM.anthropic`)
+* **Google** (`LLM.google`)
+* **OpenAI** (`LLM.openai`)
+* **DeepSeek** (`LLM.deepseek`)
+* **DeepInfra** (`LLM.deepinfra`)
+* **xAI** (`LLM.xai`)
+* **Z.ai** (`LLM.zai`)
+* **Moonshot (Kimi)** (`LLM.moonshot`)
+* **Alibaba (Qwen3)** (`LLM.alibaba`, also `LLM.aliyun`)
+* **Mistral** (`LLM.mistral`)
+* **AWS Bedrock** (`LLM.bedrock`)
+* **Ollama** (`LLM.ollama`)
+* **llama.cpp** (`LLM.llamacpp`)
 
 <details>
 <summary>Implicit</summary>
@@ -651,49 +667,28 @@ File.binwrite "rocket-with-dog.svg", res.images[0].string
 
 ## FAQ
 
+
 <details>
-<summary>What providers does mruby-llm support?</summary>
+<summary>How do mruby-llm and llm.rb relate?</summary>
 <br>
 <p>
-
-**Cloud**
-
-The following cloud-based providers are available to choose from. <br>
-In no particular order:
-
-🇺🇸 OpenAI <br>
-🇺🇸 DeepInfra <br>
-🇺🇸 xAI <br>
-🇺🇸 Google (Gemini) <br>
-🇺🇸 Anthropic <br>
-🇨🇳 DeepSeek <br>
-🇨🇳 zAI <br>
-🇨🇳 Moonshot AI (Kimi) <br>
-🇨🇳 Alibaba (Qwen3) <br>
-🇪🇺 Mistral <br>
-
-**Weights**
-
-The following providers provide access to open-weight models. <br>
-In no particular order:
-
-🇺🇸 DeepInfra <br>
-🇨🇳 DeepSeek <br>
-🇨🇳 zAI <br>
-🇨🇳 Moonshot AI (Kimi) <br>
-🇨🇳 Alibaba (Qwen3) <br>
-🇪🇺 Mistral <br>
-
-**Local**
-
-The following providers can be run locally on your own hardware. <br>
-In no particular order:
-
-* Ollama
-* Llamacpp
+There is a close and ongoing relationship between the
+two projects. The [llm.rb](https://github.com/r-uby-dev/llm)
+project was created first (over three years ago) and it is
+the reference implementation.
 </p>
-</details>
-
+<p>
+mruby-llm is a port of llm.rb to mruby. The codebase is
+almost identical, the interface between the two is the
+same, and the main difference between the two is what
+features they support.
+</p>
+<p>
+Most development happens in the llm.rb repository and it
+is then backported to the mruby runtime afterwards but
+sometimes backports go in the other direction, too.
+</p>
+</detail>
 <details>
 <summary>I have a limited budget. What should I do?</summary>
 <br>
