@@ -688,7 +688,7 @@ Most development happens in the llm.rb repository and it
 is then backported to the mruby runtime afterwards but
 sometimes backports go in the other direction, too.
 </p>
-</detail>
+</details>
 <details>
 <summary>I have a limited budget. What should I do?</summary>
 <br>
