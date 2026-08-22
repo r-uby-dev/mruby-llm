@@ -9,18 +9,19 @@
 Welcome to the canonical mruby-llm repository.
 
 mruby-llm is an advanced runtime for building agentic AI applications
-on mruby. It has zero runtime dependencies by default, it supports
+on mruby. It has zero runtime dependencies by default, supports
 concurrent and parallel tool execution and has a single coherent API
-that spans 12+ providers. Streaming, tools, guards, compaction, builtin
-MCP/A2A support all build on the same three concepts: providers,
-contexts, and agents.
+that spans 12+ providers. Streaming, tools, guards, compaction,
+and the builtin MCP/A2A support all build on the same three concepts:
+providers, contexts, and agents.
 
-Once you learn the fundamentals, everything else falls into place
-naturally. mruby-llm is a port of [llm.rb](https://github.com/r-uby-dev/llm)
-from CRuby to mruby and certain features - such as ActiveRecord support -
-are absent from the mruby runtime. The concurrency model is almost
-the same but the available strategies are limited to what mruby and
-its ecosystem provide.
+The most effective way to learn about mruby-llm is to ask
+[the r.uby.dev chatbot](https://r.uby.dev) a question. It is
+connected to the mruby-llm GitHub repository so all answers
+are grounded in the mruby-llm source code.
+
+The mruby-llm project is a port of the [llm.rb](https://github.com/r-uby-dev/llm)
+runtime for CRuby.
 
 ## Install
 
@@ -722,23 +723,13 @@ type.
 If you're on a budget, DeepSeek is hard to beat.
 </details>
 
-## Applications
-
-mruby-llm is used to build small terminal applications that are
-available to the general public over SSH.
-
-| Application | Try it | Runtime |
-| --- | --- | --- |
-| [matz](https://r.uby.dev/matz/) | `ssh matz@r.uby.dev` | [mruby-llm](https://r.uby.dev/mruby-llm/) |
-| [robert](https://4.4bsd.dev/robert) | `ssh robert@4.4bsd.dev` | [mruby-llm](https://r.uby.dev/mruby-llm/) |
-
 ## Resources
 
-The [r.uby.dev](https://r.uby.dev) homepage also includes more learning material
-and resources.
-
-- [r.uby.dev/mruby-llm](https://r.uby.dev/mruby-llm/)
-- [llm.rb](https://r.uby.dev/llm/)
+The [r.uby.dev chatbot](https://r.uby.dev) is connected
+to this very GitHub repository. It can read documentation,
+source code, issues, and pull requests. It is the most
+effective way to learn about mruby-llm (and
+[llm.rb](https://github.com/r-uby-dev/llm))
 
 ## License
 
