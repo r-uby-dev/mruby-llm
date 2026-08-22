@@ -668,22 +668,22 @@ File.binwrite "rocket-with-dog.svg", res.images[0].string
 
 
 <details>
-<summary>How do mruby-llm and llm.rb relate?</summary>
+<summary>Can I link mruby-llm to a binary?</summary>
 <br>
 <p>
 
-There is a close and ongoing relationship between the
-two projects. The [llm.rb](https://github.com/r-uby-dev/llm)
-project was created first (over three years ago) and it is
-the reference implementation. mruby-llm is a port of llm.rb
-to mruby. The codebase is almost identical, the interface
-between the two is the same, and the main difference between
-the two is what features they support.
+You can and that happens to be the primary reason
+that I decided to create mruby-llm. The binaries can
+be as small as 2MB. A common mruby approach for this
+problem is to create a small C program (`main.c`) that
+embeds the bytecode of your program in a static C array.
 </p>
 <p>
-Most development happens in the llm.rb repository and it
-is then backported to the mruby runtime afterwards but
-sometimes backports go in the other direction, too.
+The program also links mruby and through mruby it can
+execute the bytecode from the static C array. It is
+also possible to link other C programs to your binary
+and they can also be made accessible to your mruby
+program.
 </p>
 </details>
 <details>
@@ -713,6 +713,24 @@ though it does, through the `json_object` response
 type.
 </p>
 If you're on a budget, DeepSeek is hard to beat.
+</details>
+<details>
+<summary>What's the relationship with llm.rb?</summary>
+<br>
+<p>
+
+mruby-llm and llm.rb are closely related. The [llm.rb](https://github.com/r-uby-dev/llm)
+project was created first (over three years ago) and it is
+the reference implementation. mruby-llm is a port of llm.rb
+to mruby. The codebase is almost identical, the interface
+between the two is the same, and the main difference between
+the two is what features they support.
+</p>
+<p>
+Most development happens in the llm.rb repository and it
+is then backported to the mruby runtime afterwards but
+sometimes backports go in the other direction, too.
+</p>
 </details>
 
 ## Resources
