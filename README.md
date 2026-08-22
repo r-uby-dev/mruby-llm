@@ -24,8 +24,7 @@ ecosystem and that  happens to be what mruby-llm is based on.
 
 ## Install
 
-Source code and build instructions are available from
-[github.com/r-uby-dev/mruby-llm](https://github.com/r-uby-dev/mruby-llm).
+Add the following to your `build_config.rb` (or its equivalent):
 
 ```ruby
 MRuby::Build.new("app") do |conf|
@@ -739,7 +738,7 @@ The [r.uby.dev chatbot](https://r.uby.dev) is connected
 to this very GitHub repository. It can read documentation,
 source code, issues, and pull requests. It is the most
 effective way to learn about mruby-llm (and
-[llm.rb](https://github.com/r-uby-dev/llm))
+[llm.rb](https://github.com/r-uby-dev/llm)).
 
 ## License
 
